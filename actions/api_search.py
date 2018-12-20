@@ -6,6 +6,8 @@ or (at your option) any later version.
 """
 
 # -*- coding: utf-8 -*-
+from collections import OrderedDict
+
 try:
     from qgis.core import Qgis
 except:
@@ -53,6 +55,7 @@ class ApiSearch(ApiParent):
         self.json_search = {}
         self.lbl_visible = False
 
+
     def api_search(self):
         
         # Dialog
@@ -65,17 +68,20 @@ class ApiSearch(ApiParent):
         self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dlg_search)
         #self.dlg_search.setFixedHeight(180)
 
-        sql = ("SELECT " + self.schema_name + ".gw_api_get_search(9,'es')")
+
+        body = self.create_body()
+        sql = ("SELECT " + self.schema_name + ".gw_api_getsearch($${" + body + "}$$)::text")
         row = self.controller.get_row(sql, log_sql=True)
         if not row:
             self.controller.show_message("NOT ROW FOR: " + sql, 2)
-            return
-        result = row[0]
+            return False
+        complet_list = [json.loads(row[0], object_pairs_hook=OrderedDict)]
+
 
         main_tab = self.dlg_search.findChild(QTabWidget, 'main_tab')
         first_tab = None
 
-        for tab in result["formTabs"]:
+        for tab in complet_list[0]["form"]:
             if first_tab is None:
                 first_tab = tab['tabName']
             tab_widget = QWidget(main_tab)
@@ -88,7 +94,7 @@ class ApiSearch(ApiParent):
                 label = QLabel()
                 label.setObjectName('lbl_' + field['label'])
                 label.setText(field['label'].capitalize())
-                if field['widgettype'] == 'combotext':
+                if field['widgettype'] == 'typeahead':
                     completer = QCompleter()
                     widget = self.add_lineedit(field)
                     widget = self.set_completer(widget, completer)
@@ -211,30 +217,25 @@ class ApiSearch(ApiParent):
     def make_list(self, completer, model, widget):
         """ Create a list of ids and populate widget (QLineEdit)"""
         # Create 2 json, one for first QLineEdit and other for second QLineEdit
-        json_updatesearch = {}
-        json_updatesearch_add = {}
+
+        form_search = ''
+        extras_search = ''
+        form_search_add = ''
+        extras_search_add = ''
         row = None
         index = self.dlg_search.main_tab.currentIndex()
         combo_list = self.dlg_search.main_tab.widget(index).findChildren(QComboBox)
         line_list = self.dlg_search.main_tab.widget(index).findChildren(QLineEdit)
-        json_updatesearch['tabName'] = self.dlg_search.main_tab.widget(index).objectName()
-        json_updatesearch_add['tabName'] = self.dlg_search.main_tab.widget(index).objectName()
+        form_search += '"tabName":"'+self.dlg_search.main_tab.widget(index).objectName()+'"'
+        form_search_add += '"tabName":"' + self.dlg_search.main_tab.widget(index).objectName() + '"'
         if combo_list:
             combo = combo_list[0]
             id = utils_giswater.get_item_data(self.dlg_search, combo, 0)
             name = utils_giswater.get_item_data(self.dlg_search, combo, 1)
-            json_updatesearch[combo.property('column_id')] = {}
-            _json = {}
-            _json['id'] = id
-            _json['name'] = name
-            json_updatesearch[combo.property('column_id')] = _json
-            json_updatesearch_add[combo.property('column_id')] = _json
-
+            extras_search += '"'+combo.property('column_id')+'":{"id":"' + str(id) + '", "name":"' + name + '"}, '
+            extras_search_add += '"' + combo.property('column_id') + '":{"id":"' + str(id) + '", "name":"' + name + '"}, '
         if line_list:
-            # Prepare an aux json because 1 field of main json is another json
-            _json = {}
             line_edit = line_list[0]
-
             # If current tab have more than one QLineEdit, clear second QLineEdit
             if len(line_list) == 2:
                 line_edit.textChanged.connect(partial(self.clear_line_edit_add, line_list))
@@ -242,15 +243,11 @@ class ApiSearch(ApiParent):
             value = utils_giswater.getWidgetText(self.dlg_search, line_edit, return_string_null=False)
             if str(value) == '':
                 return
-            json_updatesearch[line_edit.property('column_id')] = {}
-            json_updatesearch_add[line_edit.property('column_id')] = {}
-            _json['text'] = value
-            widget.property('column_id')
-            json_updatesearch[line_edit.property('column_id')] = _json
-            json_updatesearch_add[line_edit.property('column_id')] = _json
-            json_updatesearch = json.dumps(json_updatesearch)
 
-            sql = ("SELECT " + self.schema_name + ".gw_api_updatesearch($$" +json_updatesearch + "$$)")
+            extras_search += '"' + line_edit.property('column_id') + '":{"text":"' + value + '"}'
+            extras_search_add += '"' + line_edit.property('column_id') + '":{"text":"' + value + '"}'
+            body = self.create_body(form=form_search, extras=extras_search)
+            sql = ("SELECT " + self.schema_name + ".gw_api_setsearch($${" +body + "}$$)")
             row = self.controller.get_row(sql, log_sql=True)
             if row:
                 self.result_data = row[0]
@@ -273,18 +270,14 @@ class ApiSearch(ApiParent):
             self.set_completer_object_api(completer, model, widget, display_list)
 
         if len(line_list) == 2:
-            _json = {}
             line_edit_add = line_list[1]
             value = utils_giswater.getWidgetText(self.dlg_search, line_edit_add)
             if str(value) == 'null':
                 return
 
-            json_updatesearch_add[line_edit_add.property('column_id')] = {}
-            _json['text'] = value
-            json_updatesearch_add[line_edit_add.property('column_id')] = _json
-            json_updatesearch_add = json.dumps(json_updatesearch_add)
-
-            sql = ("SELECT " + self.schema_name + ".gw_api_updatesearch_add($$" + json_updatesearch_add + "$$)")
+            extras_search_add += ', "' + line_edit_add.property('column_id') + '":{"text":"' + value + '"}'
+            body = self.create_body(form=form_search_add, extras=extras_search_add)
+            sql = ("SELECT " + self.schema_name + ".gw_api_setsearch_add($${" + body + "}$$)")
             row = self.controller.get_row(sql, log_sql=True)
             if row:
                 self.result_data = row[0]
@@ -331,9 +324,11 @@ class ApiSearch(ApiParent):
 
     def open_hydrometer_dialog(self, table_name=None, feature_id=None):
 
-
-        sql = ("SELECT " + self.schema_name + ".gw_api_get_infofromid('"+str(table_name)+"', '"+str(feature_id)+"',"
-               " null, True, 9, 100)")
+        # sql = ("SELECT " + self.schema_name + ".gw_api_get_infofromid('"+str(table_name)+"', '"+str(feature_id)+"',"
+        #        " null, True, 9, 100)")
+        feature = '"tableName":"' + str(table_name) + '", "id":"' + str(feature_id) + '"'
+        body = self.create_body(feature=feature)
+        sql = ("SELECT " + self.schema_name + ".gw_api_getinfofromid($${" + body + "}$$)")
         row = self.controller.get_row(sql, log_sql=True)
         if not row:
             self.controller.show_message("NOT ROW FOR: " + sql, 2)
@@ -344,7 +339,7 @@ class ApiSearch(ApiParent):
 
         self.hydro_info_dlg.btn_close.clicked.connect(partial(self.close_dialog, self.hydro_info_dlg))
         self.hydro_info_dlg.rejected.connect(partial(self.close_dialog, self.hydro_info_dlg))
-        field_id = str(row[0]['feature']['idName'])
+        field_id = str(row[0]['body']['feature']['idName'])
         self.populate_basic_info(self.hydro_info_dlg, row, field_id)
 
         self.hydro_info_dlg.open()

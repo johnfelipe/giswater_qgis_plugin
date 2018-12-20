@@ -20,7 +20,8 @@ if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:
     from qgis.core import QgsMapLayerRegistry    
 else:   
     from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt, QTranslator 
-    from qgis.PyQt.QtWidgets import QToolBox, QCheckBox, QLabel, QMessageBox, QPushButton, QTabWidget, QApplication, QAction
+    from qgis.PyQt.QtWidgets import QToolBox, QCheckBox, QLabel, QMessageBox, QPushButton, QTabWidget, QApplication
+    from qgis.PyQt.QtWidgets import QAction
     from qgis.PyQt.QtSql import QSqlDatabase
     from qgis.core import QgsDataSourceUri
     from qgis.core import QgsProject
@@ -39,7 +40,7 @@ class DaoController():
     
     def __init__(self, settings, plugin_name, iface, logger_name='plugin', create_logger=True):
         """ Class constructor """
-        
+
         self.settings = settings      
         self.plugin_name = plugin_name               
         self.iface = iface               
@@ -49,7 +50,10 @@ class DaoController():
         self.logged = False 
         self.postgresql_version = None
         self.logger = None
-        self.api_cf = None
+        self.basic_api_cf = None  # with this variable we know if the basic_info is active or not
+        self.epa_api_cf = None  # with this variable we know if the epa_info is active or not
+        self.api_on = None  # with this variable we know if the info is active or not and control all action.triggered
+        self.previous_maptool = None
         if create_logger:
             self.set_logger(logger_name)
                 
@@ -906,20 +910,20 @@ class DaoController():
         return self.dao.check_column(self.schema_name, tablename, columname)
     
 
-    def get_group_layers(self, geom_type):
-        """ Get layers of the group @geom_type """
-        
-        list_items = []        
-        sql = ("SELECT tablename FROM " + self.schema_name + ".sys_feature_cat"
-               " WHERE type = '" + geom_type.upper() + "'")
-        rows = self.get_rows(sql)
-        if rows:
-            for row in rows:
-                layer = self.get_layer_by_tablename(row[0])
-                if layer:
-                    list_items.append(layer)
-        
-        return list_items
+    # def get_group_layers(self, geom_type):
+    #     """ Get layers of the group @geom_type """
+    #
+    #     list_items = []
+    #     sql = ("SELECT tablename FROM " + self.schema_name + ".sys_feature_cat"
+    #            " WHERE type = '" + geom_type.upper() + "'")
+    #     rows = self.get_rows(sql)
+    #     if rows:
+    #         for row in rows:
+    #             layer = self.get_layer_by_tablename(row[0])
+    #             if layer:
+    #                 list_items.append(layer)
+    #
+    #     return list_items
 
     # TODO same function that GET_GROUP_LAYER but this is for api
     def api_get_group_layers(self, geom_type):
@@ -1130,19 +1134,37 @@ class DaoController():
             
         return list_values
 
-
     def restore_info(self, restore_cursor=True):
+        self.restore_basic_info(restore_cursor)
+        self.restore_epa_info(restore_cursor)
+
+
+    def restore_basic_info(self, restore_cursor=True):
         """  Disconnect canvasClicked from Api_CF  and restore cursor"""
         action_info = self.iface.mainWindow().findChild(QAction, 'basic_api_info')
         if action_info.isChecked():
             action_info.setChecked(False)
-        else:
-            print("NOT FOUND")
         if restore_cursor:
             QApplication.restoreOverrideCursor()
-        if self.api_cf is not None:
-            ep = self.api_cf.emit_point
-            ep.canvasClicked.disconnect()
-            self.api_cf = None
+
+        if self.basic_api_cf is not None:
+            if hasattr(self.basic_api_cf, 'emit_point'):
+                ep = self.basic_api_cf.emit_point
+                ep.canvasClicked.disconnect()
+            self.basic_api_cf = None
 
 
+
+
+    def restore_epa_info(self, restore_cursor=True):
+        action_epa_info = self.iface.mainWindow().findChild(QAction, 'go2epa_api_info')
+        if action_epa_info.isChecked():
+            action_epa_info.setChecked(False)
+        if restore_cursor:
+            QApplication.restoreOverrideCursor()
+
+        if self.epa_api_cf is not None:
+            if hasattr(self.epa_api_cf, 'emit_point'):
+                ep = self.epa_api_cf.emit_point
+                ep.canvasClicked.disconnect()
+            self.epa_api_cf = None

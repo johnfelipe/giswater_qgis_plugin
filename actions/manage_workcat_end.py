@@ -56,17 +56,17 @@ class ManageWorkcatEnd(ParentManage):
         # Get layers of every geom_type
         self.reset_lists()
         self.reset_layers()
-        self.layers['arc'] = self.controller.get_group_layers('arc')
-        self.layers['node'] = self.controller.get_group_layers('node')
-        self.layers['connec'] = self.controller.get_group_layers('connec')
-        self.layers['element'] = self.controller.get_group_layers('element')
+        self.layers['arc'] = self.controller.api_get_group_layers('arc')
+        self.layers['node'] = self.controller.api_get_group_layers('node')
+        self.layers['connec'] = self.controller.api_get_group_layers('connec')
+        self.layers['element'] = self.controller.api_get_group_layers('element')
 
         # Remove 'gully' for 'WS'
         self.project_type = self.controller.get_project_type()
         if self.project_type == 'ws':
             self.dlg_work_end.tab_feature.removeTab(4)
         else:
-            self.layers['gully'] = self.controller.get_group_layers('gully')
+            self.layers['gully'] = self.controller.api_get_group_layers('gully')
 
         # Set icons
         self.set_icon(self.dlg_work_end.btn_insert, "111")
@@ -94,7 +94,7 @@ class ManageWorkcatEnd(ParentManage):
 
         # Adding auto-completion to a QLineEdit for default feature
         geom_type = "arc"
-        viewname = "v_edit_" + geom_type
+        viewname = "ve_" + geom_type
         self.set_completer_feature_id(self.dlg_work_end.feature_id, geom_type, viewname)
 
         # Set default tab 'arc'
@@ -239,7 +239,7 @@ class ManageWorkcatEnd(ParentManage):
     def update_geom_type(self, geom_type, ids_list):
         """ Get elements from @geom_type and update his corresponding table """
         
-        tablename = "v_edit_" + geom_type
+        tablename = "ve_" + geom_type
         if self.selected_list is None:
             return
 
@@ -296,7 +296,7 @@ class ManageWorkcatEnd(ParentManage):
 
         # Get sys_feature_cat.id from cat_feature.id
         sql = ("SELECT sys_type"
-               " FROM " + self.schema_name + ".v_edit_arc"
+               " FROM " + self.schema_name + ".ve_arc"
                " WHERE arc_id = '" + arc_id + "'")
         row = self.controller.get_row(sql)
         if not row:

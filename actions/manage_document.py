@@ -66,7 +66,7 @@ class ManageDocument(ParentManage):
         if self.project_type == 'ws':
             self.dlg_add_doc.tab_feature.removeTab(3)
         else:
-            self.layers['gully'] = self.controller.get_group_layers('gully')                  
+            self.layers['gully'] = self.controller.api_get_group_layers('gully')
         
         # Remove all previous selections
         if self.single_tool_mode:
@@ -125,7 +125,7 @@ class ManageDocument(ParentManage):
         widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         expr_filter = geom_type + "_id = '" + str(feature_id) + "'"
         # Set model of selected widget
-        table_name = self.schema_name + ".v_edit_" + geom_type
+        table_name = self.schema_name + ".ve_" + geom_type
         self.set_model_to_table(widget, table_name, expr_filter)
 
 

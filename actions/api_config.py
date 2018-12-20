@@ -32,7 +32,7 @@ from giswater.ui_manager import ApiConfigUi
 
 
 class ApiConfig(ApiParent):
-    
+
     def __init__(self, iface, settings, controller, plugin_dir):
         """ Class to control toolbar 'om_ws' """
         ApiParent.__init__(self, iface, settings, controller, plugin_dir)
@@ -195,7 +195,6 @@ class ApiConfig(ApiParent):
     def construct_form_param_user(self, row, pos):
 
         for field in row[pos]['fields']:
-            
             if field['label']:
                 lbl = QLabel()
                 lbl.setObjectName('lbl' + field['name'])
@@ -211,7 +210,7 @@ class ApiConfig(ApiParent):
                     chk.setChecked(False)
                 chk.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-                if field['widgettype'] == 'linetext':
+                if field['widgettype'] == 'text':
                     widget = QLineEdit()
                     widget.setText(field['value'])
                     widget.lostFocus.connect(partial(self.get_values_changed_param_user, chk, widget, field))
@@ -221,11 +220,11 @@ class ApiConfig(ApiParent):
                     self.populate_combo(widget, field)
                     widget.currentIndexChanged.connect(partial(self.get_values_changed_param_user, chk, widget, field))
                     widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-                elif field['widgettype'] == 'checkbox':
+                elif field['widgettype'] == 'check':
                     widget = chk
                     widget.stateChanged.connect(partial(self.get_values_changed_param_user, chk, chk, field))
                     widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-                elif field['widgettype'] == 'date':
+                elif field['widgettype'] == 'datepickertime':
                     widget = QDateEdit()
                     widget.setCalendarPopup(True)
                     date = QDate.fromString(field['value'], 'yyyy/MM/dd')
@@ -289,7 +288,7 @@ class ApiConfig(ApiParent):
                 lbl.setMinimumSize(160, 0)
                 lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
-                if field['widgettype'] == 'linetext':
+                if field['widgettype'] == 'text':
                     widget = QLineEdit()
                     widget.setText(field['value'])
                     widget.lostFocus.connect(partial(self.get_values_changed_param_system, widget))
@@ -299,7 +298,7 @@ class ApiConfig(ApiParent):
                     self.populate_combo(widget, field)
                     widget.currentIndexChanged.connect(partial(self.get_values_changed_param_system, widget))
                     widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-                elif field['widgettype'] == 'checkbox':
+                elif field['widgettype'] == 'check':
                     widget = QCheckBox()
                     if field['value'].lower() == 'true':
                         widget.setChecked(True)
@@ -307,7 +306,7 @@ class ApiConfig(ApiParent):
                         widget.setChecked(False)
                     widget.stateChanged.connect(partial(self.get_values_changed_param_system, widget))
                     widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-                elif field['widgettype'] == 'date':
+                elif field['widgettype'] == 'datepickertime':
                     widget = QDateEdit()
                     widget.setCalendarPopup(True)
                     date = QDate.fromString(field['value'], 'yyyy/MM/dd')
@@ -362,7 +361,7 @@ class ApiConfig(ApiParent):
                     self.order_widgets_system(field, self.system_form, lbl,  widget)
 
     def get_event_combo_parent(self, fields, row):
-        
+
         if fields == 'fields':
             for field in row[0]["fields"]:
                 if field['isparent']:
@@ -371,7 +370,7 @@ class ApiConfig(ApiParent):
 
 
     def populate_combo(self, widget, field):
-        
+
         # Generate list of items to add into combo
         widget.blockSignals(True)
         widget.clear()
@@ -391,10 +390,10 @@ class ApiConfig(ApiParent):
 
 
     def fill_child(self, widget):
-        
+
         combo_parent = widget.objectName()
         combo_id = utils_giswater.get_item_data(self.dlg_config, widget)
-
+        # TODO cambiar por gw_api_getchilds
         sql = ("SELECT " + self.schema_name + ".gw_api_get_combochilds('config" + "' ,'' ,'' ,'" + str(combo_parent) + "', '" + str(combo_id) + "','')")
         row = self.controller.get_row(sql, log_sql=True)
         #TODO::Refactor input and output for function "gw_api_get_combochilds" and refactor "row[0]['fields']"
@@ -404,15 +403,15 @@ class ApiConfig(ApiParent):
 
 
     def populate_child(self, combo_child, result):
-        
-        child = self.dlg_config.findChild(QComboBox, str(combo_child['childName']))
+
+        child = self.dlg_config.findChild(QComboBox, str(combo_child['widgetname']))
         if child:
             self.populate_combo(child, combo_child)
 
 
     def order_widgets(self, field, form, lbl, chk, widget):
-        
-        if field['widgettype'] != 'checkbox':
+
+        if field['widgettype'] != 'check':
             form.addWidget(lbl, field['layout_order'], 0)
             form.addWidget(chk, field['layout_order'], 1)
             form.addWidget(widget, field['layout_order'], 2)
@@ -424,7 +423,7 @@ class ApiConfig(ApiParent):
     def order_widgets_system(self, field, form, lbl,  widget):
 
 
-        if field['widgettype'] != 'checkbox':
+        if field['widgettype'] != 'check':
             form.addWidget(lbl, field['layout_order'], 0)
             form.addWidget(widget, field['layout_order'], 2)
         else:
@@ -512,6 +511,8 @@ class ApiConfig(ApiParent):
         self.controller.log_info(str(sql))
         self.controller.execute_sql(sql)
 
+        message = "Values has been updated"
+        self.controller.show_info(message)
         # Close dialog
         self.close_dialog(self.dlg_config)
 
@@ -528,7 +529,7 @@ class ApiConfig(ApiParent):
 
     # TODO:
     def remove_empty_groupBox(self, layout):
-        
+
         self.controller.log_info(str("TEST"))
         groupBox_list = layout.findChild(QWidget)
         self.controller.log_info(str(layout.objectName()))

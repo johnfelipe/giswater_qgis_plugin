@@ -82,10 +82,9 @@ class ReplaceNodeMapTool(ParentMapTool):
 
         # Get nodetype_id from current node
         project_type = self.controller.get_project_type()
-        if project_type == 'ws':
-            node_type = feature.attribute('nodetype_id')
+        node_type = feature.attribute('node_type')
+
         if project_type == 'ud':
-            node_type = feature.attribute('node_type')
             sql = "SELECT DISTINCT(id) FROM " + self.schema_name + ".cat_node ORDER BY id"
             rows = self.controller.get_rows(sql)
             utils_giswater.fillComboBox(self.dlg_nodereplace, "node_nodecat_id", rows, allow_nulls=False)
@@ -276,13 +275,13 @@ class ReplaceNodeMapTool(ParentMapTool):
                 self.controller.execute_sql(sql)
 
                 # Update field 'nodecat_id'
-                sql = ("UPDATE " + self.schema_name + ".v_edit_node"
+                sql = ("UPDATE " + self.schema_name + ".ve_node"
                        " SET nodecat_id = '" + str(node_nodecat_id) + "'"
                        " WHERE node_id = '" + str(new_node_id[0]) + "'")
                 self.controller.execute_sql(sql)
 
                 if project_type == 'ud':
-                    sql = ("UPDATE " + self.schema_name + ".v_edit_node"
+                    sql = ("UPDATE " + self.schema_name + ".ve_node"
                            " SET node_type = '" + str(node_node_type_new) + "'"
                            " WHERE node_id = '" + str(new_node_id[0]) + "'")
                     self.controller.execute_sql(sql)
@@ -294,7 +293,7 @@ class ReplaceNodeMapTool(ParentMapTool):
                     return
 
                 # Set active layer
-                viewname = "v_edit_" + str(row[0])
+                viewname = "ve_" + str(row[0])
                 layer = self.controller.get_layer_by_tablename(viewname)
                 if layer:
                     self.iface.setActiveLayer(layer)
@@ -387,8 +386,8 @@ class ReplaceNodeMapTool(ParentMapTool):
         # Clear snapping
         self.snapper_manager.clear_snapping()
 
-        # Set active layer to 'v_edit_node'
-        self.layer_node = self.controller.get_layer_by_tablename("v_edit_node")
+        # Set active layer to 've_node'
+        self.layer_node = self.controller.get_layer_by_tablename("ve_node")
         self.iface.setActiveLayer(self.layer_node)   
         self.force_active_layer = True           
 

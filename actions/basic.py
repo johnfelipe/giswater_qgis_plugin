@@ -38,7 +38,6 @@ class Basic(ParentAction):
         self.controller = controller
         self.plugin_dir = plugin_dir
         self.minor_version = "3.0"
-        self.search_plus = None
         ParentAction.__init__(self, iface, settings, controller, plugin_dir)
         self.logged = False
         self.login_file = os.path.join(self.plugin_dir, 'config', 'login.auth')
@@ -128,21 +127,17 @@ class Basic(ParentAction):
 
     def basic_api_info(self):
         """ Button 37: ApiCf """
-        if self.controller.api_cf is not None:
-            self.controller.restore_info()
+        self.controller.restore_epa_info()
+        if self.controller.basic_api_cf is not None:
+            self.controller.restore_basic_info()
             return
 
-        QApplication.setOverrideCursor(Qt.WhatsThisCursor)
         self.api_cf = ApiCF(self.iface, self.settings, self.controller, self.plugin_dir)
-        self.controller.api_cf = self.api_cf
+        self.controller.basic_api_cf = self.api_cf
         self.api_cf.api_info()
-
 
 
     def close_dialog(self, dlg):
         ParentAction.close_dialog(self, dlg)
-        try:
-            self.search_plus.refresh_data()
-        except:
-            pass
+
 

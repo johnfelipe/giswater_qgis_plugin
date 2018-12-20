@@ -85,13 +85,13 @@ class ManageVisit(ParentManage, QObject):
         # Get layers of every geom_type
         self.reset_lists()
         self.reset_layers()
-        self.layers['arc'] = self.controller.get_group_layers('arc')
-        self.layers['node'] = self.controller.get_group_layers('node')
-        self.layers['connec'] = self.controller.get_group_layers('connec')
-        self.layers['element'] = self.controller.get_group_layers('element')
+        self.layers['arc'] = self.controller.api_get_group_layers('arc')
+        self.layers['node'] = self.controller.api_get_group_layers('node')
+        self.layers['connec'] = self.controller.api_get_group_layers('connec')
+        self.layers['element'] = self.controller.api_get_group_layers('element')
         # Remove 'gully' for 'WS'
         if self.controller.get_project_type() != 'ws':
-            self.layers['gully'] = self.controller.get_group_layers('gully')
+            self.layers['gully'] = self.controller.api_get_group_layers('gully')
           
         # Reset geometry  
         self.x = None
@@ -486,7 +486,7 @@ class ManageVisit(ParentManage, QObject):
         where all callbacks are lost ance can't be registered. """
 
         # configure model visibility
-        table_name = "v_edit_" + self.geom_type
+        table_name = "ve_" + self.geom_type
         self.set_configuration(dialog, self.tbl_relation, table_name)
 
 
@@ -499,7 +499,7 @@ class ManageVisit(ParentManage, QObject):
         # 2) check if there are features related to the current visit
         # 3) if so, select them => would appear in the table associated to the model
         self.geom_type = self.feature_type.currentText().lower()
-        viewname = "v_edit_" + self.geom_type
+        viewname = "ve_" + self.geom_type
         self.set_completer_feature_id(dialog.feature_id, self.geom_type, viewname)
 
         # set table model and completer

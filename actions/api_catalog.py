@@ -6,6 +6,8 @@ or (at your option) any later version.
 """
 
 # -*- coding: latin-1 -*-
+from collections import OrderedDict
+
 try:
     from qgis.core import Qgis
 except:
@@ -45,8 +47,12 @@ class ApiCatalog(ApiParent):
 
     def api_catalog(self, previous_dialog, widget_name, geom_type):
         self.controller.restore_info()
-        sql = ("SELECT " + self.schema_name + ".gw_api_get_catalog('upsert_catalog_"+geom_type+"','','','',9)")
+
+        form = '"formName":"upsert_catalog_arc", "tabName":"data", "editable":"TRUE"'
+        body = self.create_body(form)
+        sql = ("SELECT " + self.schema_name + ".gw_api_getcatalog($${" + body + "}$$)::text")
         row = self.controller.get_row(sql, log_sql=True)
+        complet_list = [json.loads(row[0], object_pairs_hook=OrderedDict)]
         groupBox_1 = QGroupBox("Filter")
         self.filter_form = QGridLayout()
 
@@ -57,10 +63,9 @@ class ApiCatalog(ApiParent):
         self.dlg_catalog.btn_accept.clicked.connect(partial(self.fill_geomcat_id, previous_dialog, widget_name))
 
         main_layout = self.dlg_catalog.widget.findChild(QGridLayout, 'main_layout')
-        result = row[0]['editData']
+        result = complet_list[0]['body']['data']
         # if 'fields' not in result:
         #     return
-
         for field in result['fields']:
             label = QLabel()
             label.setObjectName('lbl_' + field['label'])
@@ -77,24 +82,65 @@ class ApiCatalog(ApiParent):
         verticalSpacer1 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         main_layout.addItem(verticalSpacer1)
 
-        # Event on change from combo parent
-        self.get_event_combo_parent('fields', result, geom_type)
+        matcat_id = self.dlg_catalog.findChild(QComboBox, 'matcat_id')
+        pn = self.dlg_catalog.findChild(QComboBox, 'pn')
+        dn = self.dlg_catalog.findChild(QComboBox, 'dn')
+        id = self.dlg_catalog.findChild(QComboBox, 'id')
 
-        # Filter combos on open form
-        widget = None
-        widget = self.dlg_catalog.findChild(QComboBox, 'matcat_id')
-        if widget:
-            self.fill_child(widget, geom_type)
-        self.populate_catalog_id(geom_type)
+        # Call get_api_catalog first time
+        self.get_api_catalog(matcat_id, pn, dn, id)
+
+        # Set Listeners
+        matcat_id.currentIndexChanged.connect(partial(self.populate_pn_dn, matcat_id, pn, dn))
+        pn.currentIndexChanged.connect(partial(self.get_api_catalog, matcat_id, pn, dn, id))
+        dn.currentIndexChanged.connect(partial(self.get_api_catalog, matcat_id, pn, dn, id))
 
         # Open form
         self.dlg_catalog.show()
 
 
+    def get_api_catalog(self, matcat_id, pn, dn, id):
+
+        # id = self.dlg_catalog.findChild(QComboBox, 'id')
+
+        matcat_id_value = utils_giswater.get_item_data(self.dlg_catalog, matcat_id)
+        pn_value = utils_giswater.get_item_data(self.dlg_catalog, pn)
+        dn_value = utils_giswater.get_item_data(self.dlg_catalog, dn)
+
+        form = '"formName":"upsert_catalog_arc", "tabName":"data", "editable":"TRUE"'
+        extras = '"fields":{"matcat_id":"'+str(matcat_id_value)+'", "pn":"'+str(pn_value)+'", "dn":"'+str(dn_value)+'"}'
+        body = self.create_body(form=form, extras=extras)
+        sql = ("SELECT " + self.schema_name + ".gw_api_getcatalog($${" + body + "}$$)::text")
+        row = self.controller.get_row(sql, log_sql=True)
+        complet_list = [json.loads(row[0], object_pairs_hook=OrderedDict)]
+        result = complet_list[0]['body']['data']
+        for field in result['fields']:
+            if field['column_id'] == 'id':
+                self.populate_combo(id,field)
+
+
+    def populate_pn_dn(self, matcat_id, pn, dn):
+
+        matcat_id_value = utils_giswater.get_item_data(self.dlg_catalog, matcat_id)
+
+        form = '"formName":"upsert_catalog_arc", "tabName":"data", "editable":"TRUE"'
+        extras = '"fields":{"matcat_id":"'+str(matcat_id_value)+'"}'
+        body = self.create_body(form=form, extras=extras)
+        sql = ("SELECT " + self.schema_name + ".gw_api_getcatalog($${" + body + "}$$)::text")
+        row = self.controller.get_row(sql, log_sql=True)
+        complet_list = [json.loads(row[0], object_pairs_hook=OrderedDict)]
+        result = complet_list[0]['body']['data']
+        for field in result['fields']:
+            if field['column_id'] == 'pn':
+                self.populate_combo(pn,field)
+            elif field['column_id'] == 'dn':
+                self.populate_combo(dn,field)
+
+
     def get_event_combo_parent(self, fields, row, geom_type):
         if fields == 'fields':
             for field in row["fields"]:
-                if field['isparent']:
+                if field['isparent'] is True:
                     widget = self.dlg_catalog.findChild(QComboBox, field['column_id'])
                     widget.currentIndexChanged.connect(partial(self.fill_child, widget, geom_type))
                     widget.currentIndexChanged.connect(partial(self.populate_catalog_id, geom_type))
@@ -102,7 +148,7 @@ class ApiCatalog(ApiParent):
     def fill_child(self, widget, geom_type):
         combo_parent = widget.objectName()
         combo_id = utils_giswater.get_item_data(self.dlg_catalog, widget)
-
+        # TODO cambiar por gw_api_getchilds
         sql = ("SELECT " + self.schema_name + ".gw_api_get_combochilds('catalog" + "' ,'' ,'' ,'" + str(combo_parent) + "', '" + str(combo_id) + "','"+str(geom_type)+"')")
         row = self.controller.get_row(sql, log_sql=True)
         for combo_child in row[0]['fields']:
@@ -128,7 +174,7 @@ class ApiCatalog(ApiParent):
         self.populate_combo(widget_id, row[0]['catalog_id'][0])
 
     def populate_child(self, combo_child, result):
-        child = self.dlg_catalog.findChild(QComboBox, str(combo_child['childName']))
+        child = self.dlg_catalog.findChild(QComboBox, str(combo_child['widgetname']))
         if child:
             self.populate_combo(child, combo_child)
 
@@ -165,9 +211,9 @@ class ApiCatalog(ApiParent):
             # Populate combo
             for record in records_sorted:
                 widget.addItem(str(record[1]), record)
-        if 'value' in field:
-            if str(field['value']) != 'None':
-                utils_giswater.set_combo_itemData(widget, field['value'], 0)
+        if 'selectedId' in field:
+            if str(field['selectedId']) != 'None':
+                utils_giswater.set_combo_itemData(widget, field['selectedId'], 0)
 
     def fill_geomcat_id(self, previous_dialog, widget_name):
 
