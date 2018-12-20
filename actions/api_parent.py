@@ -120,7 +120,7 @@ class ApiParent(ParentAction):
     def set_completer_object_api(self, completer, model, widget, list_items, max_visible=10):
         """ Set autocomplete of widget @table_object + "_id"
             getting id's from selected @table_object.
-            WARNING: Each QlineEdit needs their own QCompleter and their own QStringListModel!!!
+            WARNING: Each QLineEdit needs their own QCompleter and their own QStringListModel!!!
         """
 
         # Set completer and model: add autocomplete in the widget

@@ -103,62 +103,73 @@ class ApiCF(ApiParent):
                 print("FAIL get_point")
                 return
         elif button_clicked == Qt.RightButton:
-            x, y = win32gui.GetCursorPos()
-
-            click_point = QPoint(x + 5, y + 5)
-            visible_layers = self.get_visible_layers(as_list=True)
-            scale_zoom = self.iface.mapCanvas().scale()
-            srid = self.controller.plugin_settings_value('srid')
-
-            extras = '"pointClickCoords":{"xcoord":' + str(point.x()) + ', "ycoord":' + str(point.y()) + '}, '
-            extras += '"visibleLayers":' + str(visible_layers) + ', '
-            extras += '"zoomScale":' + str(scale_zoom) + ', '
-            extras += '"srid":' + str(srid)
-            body = self.create_body(extras=extras)
-            # Get layers under mouse clicked
-            sql = ("SELECT " + self.schema_name + ".gw_api_getlayersfromcoordinates($${" + body + "}$$)::text")
-            row = self.controller.get_row(sql, log_sql=False)
-            if not row:
-                self.controller.show_message("NOT ROW FOR: " + sql, 2)
-                return False
-            complet_list = [json.loads(row[0], object_pairs_hook=OrderedDict)]
-    
-            self.icon_folder = self.plugin_dir + '/icons/'
-            main_menu = QMenu()
-            for layer in complet_list[0]['body']['data']['layersNames']:
-                layer_name = self.controller.get_layer_by_tablename(layer['layerName'])
-                icon = None
-                icon_path = self.icon_folder + layer['icon'] + '.svg'
-                if os.path.exists(str(icon_path)):
-                    icon = QIcon(icon_path)
-                    sub_menu = main_menu.addMenu(icon, layer_name.name())
-                else:
-                    sub_menu = main_menu.addMenu(layer_name.name())
-
-                for feature in layer['ids']:
-                    action = QAction(str(feature['id']), None)
-                    sub_menu.addAction(action)
-                    action.triggered.connect(partial(self.set_active_layer, action))
-                    action.hovered.connect(partial(self.draw_by_action, feature))
-
-            main_menu.addSeparator()
-            action = QAction('Identify all', None)
-            action.triggered.connect(partial(self.identify_all))
-            main_menu.addAction(action)
-            main_menu.addSeparator()
-            main_menu.exec_(click_point)
-
-    def identify_all(self):
-        self.controller.log_info(str("IDENTIFY ALL"))
+            self.hilight_feature(point)
 
 
-    def draw_by_action(self, feature):
+    def hilight_feature(self, point):
+        x, y = win32gui.GetCursorPos()
+
+        click_point = QPoint(x + 5, y + 5)
+        visible_layers = self.get_visible_layers(as_list=True)
+        scale_zoom = self.iface.mapCanvas().scale()
+        srid = self.controller.plugin_settings_value('srid')
+
+        extras = '"pointClickCoords":{"xcoord":' + str(point.x()) + ', "ycoord":' + str(point.y()) + '}, '
+        extras += '"visibleLayers":' + str(visible_layers) + ', '
+        extras += '"zoomScale":' + str(scale_zoom) + ', '
+        extras += '"srid":' + str(srid)
+        body = self.create_body(extras=extras)
+        # Get layers under mouse clicked
+        sql = ("SELECT " + self.schema_name + ".gw_api_getlayersfromcoordinates($${" + body + "}$$)::text")
+        row = self.controller.get_row(sql, log_sql=False)
+        if not row:
+            self.controller.show_message("NOT ROW FOR: " + sql, 2)
+            return False
+        complet_list = [json.loads(row[0], object_pairs_hook=OrderedDict)]
+
+        self.icon_folder = self.plugin_dir + '/icons/'
+        main_menu = QMenu()
+        for layer in complet_list[0]['body']['data']['layersNames']:
+            layer_name = self.controller.get_layer_by_tablename(layer['layerName'])
+            icon = None
+            icon_path = self.icon_folder + layer['icon'] + '.svg'
+            if os.path.exists(str(icon_path)):
+                icon = QIcon(icon_path)
+                sub_menu = main_menu.addMenu(icon, layer_name.name())
+            else:
+                sub_menu = main_menu.addMenu(layer_name.name())
+
+            for feature in layer['ids']:
+                action = QAction(str(feature['id']), None)
+                sub_menu.addAction(action)
+                action.triggered.connect(partial(self.set_active_layer, action))
+                action.hovered.connect(partial(self.draw_by_action, feature))
+
+        main_menu.addSeparator()
+        # TODO identify all
+        # action = QAction('Identify all', None)
+        # #action.triggered.connect(partial(self.identify_all))
+        # action.hovered.connect(partial(self.identify_all, complet_list))
+        # main_menu.addAction(action)
+        # main_menu.addSeparator()
+        main_menu.exec_(click_point)
+
+    def identify_all(self, complet_list):
+        self.controller.log_info(str("WORK"))
+        for layer in complet_list[0]['body']['data']['layersNames']:
+            for feature in layer['ids']:
+                self.draw_by_action(feature, False)
+
+
+    def draw_by_action(self, feature, reset_rb=True):
         """ Draw lines based on geometry """
+        print(feature['geometry'])
         if feature['geometry'] is None:
             return
         list_coord = re.search('\((.*)\)', str(feature['geometry']))
         max_x, max_y, min_x, min_y = self.get_max_rectangle_from_coords(list_coord)
-        self.resetRubberbands()
+        if reset_rb is True:
+            self.resetRubberbands()
         if str(max_x) == str(min_x) and str(max_y) == str(min_y):
             point = QgsPoint(float(max_x), float(max_y))
             self.draw_point(point)
