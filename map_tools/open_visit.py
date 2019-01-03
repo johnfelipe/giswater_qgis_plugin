@@ -92,8 +92,8 @@ class OpenVisit(ParentMapTool):
         # Set active layer to 'v_edit_om_visit'
         self.layer_visit = self.controller.get_layer_by_tablename("v_edit_om_visit")
         if self.layer_visit is None:
-            msg = "Layer v_edit_om_visit not found"
-            self.controller.show_message(msg, message_level=2)
+            message = "Layer not found"
+            self.controller.show_message(message, message_level=2, parameter='v_edit_om_visit')
             self.cancel_map_tool()
             return
         self.iface.setActiveLayer(self.layer_visit)
