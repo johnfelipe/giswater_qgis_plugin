@@ -12,7 +12,7 @@ except:
     from qgis.core import QGis as Qgis
 
 if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:
-    from PyQt4.QtCore import Qt, QSettings, QPoint, QTimer, QDate
+    from PyQt4.QtCore import Qt, QSettings, QPoint, QTimer, QDate, SIGNAL
     from PyQt4.QtGui import QAction, QLineEdit, QSizePolicy, QColor, QWidget, QComboBox, QGridLayout, QSpacerItem, QLabel
     from PyQt4.QtGui import QCompleter, QStringListModel, QToolButton, QPushButton, QFrame, QSpinBox, QDoubleSpinBox
     from PyQt4.QtGui import QIntValidator, QDoubleValidator
@@ -963,10 +963,102 @@ class ApiParent(ParentAction):
         return body
 
 
+    def activate_snapping(self, emit_point):
+        # Set circle vertex marker
+        color = QColor(255, 100, 255)
+        self.vertex_marker = QgsVertexMarker(self.canvas)
+        self.vertex_marker.setIconType(QgsVertexMarker.ICON_CIRCLE)
+        self.vertex_marker.setColor(color)
+        self.vertex_marker.setIconSize(15)
+        self.vertex_marker.setPenWidth(3)
+
+        self.node1 = None
+        self.node2 = None
+        self.canvas.setMapTool(emit_point)
+        self.snapper = QgsMapCanvasSnapper(self.canvas)
+        self.layer_node = self.controller.get_layer_by_tablename("ve_node")
+        self.iface.setActiveLayer(self.layer_node)
+        self.canvas.connect(self.canvas, SIGNAL("xyCoordinates(const QgsPoint&)"), self.mouse_move)
+        emit_point.canvasClicked.connect(partial(self.snapping_node))
+
+    def snapping_node(self, point, button):
+        """ Get id of selected nodes (node1 and node2) """
+        if button == 2:
+            self.dlg_destroyed()
+            return
+        map_point = self.canvas.getCoordinateTransform().transform(point)
+        x = map_point.x()
+        y = map_point.y()
+        event_point = QPoint(x, y)
+
+        # Snapping
+        (retval, result) = self.snapper.snapToBackgroundLayers(event_point)  # @UnusedVariable
+
+        # That's the snapped point
+        if result:
+            # Check feature
+            for snapped_point in result:
+                if snapped_point.layer == self.layer_node:
+                    # Get the point
+                    snapp_feature = next(snapped_point.layer.getFeatures(
+                        QgsFeatureRequest().setFilterFid(snapped_point.snappedAtGeometry)))
+                    element_id = snapp_feature.attribute('node_id')
+
+                    message = "Selected node"
+                    if self.node1 is None:
+                        self.node1 = str(element_id)
+                        self.controller.show_message(message, message_level=0, duration=1, parameter=self.node1)
+                    elif self.node1 != str(element_id):
+                        self.node2 = str(element_id)
+                        self.controller.show_message(message, message_level=0, duration=1, parameter=self.node2)
+
+        if self.node1 is not None and self.node2 is not None:
+            self.iface.actionPan().trigger()
+            self.iface.setActiveLayer(self.layer)
+            self.iface.mapCanvas().scene().removeItem(self.vertex_marker)
+            sql = ("SELECT " + self.schema_name + ".gw_fct_node_interpolate('"
+                   ""+str(self.last_point[0])+"', '"+str(self.last_point[1])+"', '"
+                   ""+str(self.node1)+"', '"+self.node2+"')")
+            row = self.controller.get_row(sql)
+            if row:
+                if 'elev' in row[0]:
+                    utils_giswater.setWidgetText(self.dialog, 'elev', row[0]['elev'])
+                if 'top_elev' in row[0]:
+                    utils_giswater.setWidgetText(self.dialog, 'top_elev', row[0]['top_elev'])
+
+
+    def mouse_move(self, p):
+        map_point = self.canvas.getCoordinateTransform().transform(p)
+        x = map_point.x()
+        y = map_point.y()
+        eventPoint = QPoint(x, y)
+
+        # Snapping
+        (retval, result) = self.snapper.snapToCurrentLayer(eventPoint, 2)  # @UnusedVariable
+
+        # That's the snapped features
+        if result:
+            for snapped_point in result:
+                if snapped_point.layer == self.layer_node:
+                    point = QgsPoint(snapped_point.snappedVertex)
+                    # Add marker
+                    self.vertex_marker.setCenter(point)
+                    self.vertex_marker.show()
+        else:
+            self.vertex_marker.hide()
+
+
+
+
+
+
     def test(self, widget=None):
         # if event.key() == Qt.Key_Escape:
         #     self.controller.log_info(str("IT WORK S"))
         self.controller.log_info(str("---------------IT WORK S----------------"))
         return 0
-        #self.controller.log_info(str(widget.objectName()))
+
+
+
+
 

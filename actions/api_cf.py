@@ -34,7 +34,7 @@ else:
     from qgis.PyQt.QtSql import QSqlTableModel
     import urllib.parse as urlparse
 
-from qgis.core import QgsPoint, QgsCoordinateReferenceSystem, QgsCoordinateTransform
+from qgis.core import QgsPoint, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsMapToPixel
 from qgis.gui import QgsMapToolEmitPoint, QgsDateTimeEdit
 
 import json
@@ -216,6 +216,10 @@ class ApiCF(ApiParent):
             active_layer = ""
         else:
             active_layer = self.controller.get_layer_source_table_name(self.iface.activeLayer())
+
+        # Used by action_interpolate
+        last_click = self.canvas.mouseLastXY()
+        self.last_point = QgsMapToPixel.toMapCoordinates(self.canvas.getCoordinateTransform(), last_click.x(), last_click.y())
 
         visible_layers = self.get_visible_layers()
         scale_zoom = self.iface.mapCanvas().scale()
@@ -401,7 +405,7 @@ class ApiCF(ApiParent):
 
 
         # Set all action enabled(False) and visible(False) less separators
-        actions_list = self.dlg_cf.toolBar.findChildren(QAction)
+        actions_list = self.dlg_cf.findChildren(QAction)
         for action in actions_list:
             action.setEnabled(False)
             action.setVisible(False)
@@ -412,7 +416,7 @@ class ApiCF(ApiParent):
         actions_to_show = complet_result[0]['body']['form']['actions']
         for x in range(0, len(actions_to_show)):
             action = None
-            action = self.dlg_cf.toolBar.findChild(QAction, actions_to_show[x]['actionName'])
+            action = self.dlg_cf.findChild(QAction, actions_to_show[x]['actionName'])
             if action is not None:
                 action.setVisible(True)
                 action.setToolTip(actions_to_show[x]['actionTooltip'])
@@ -568,6 +572,8 @@ class ApiCF(ApiParent):
         action_link.triggered.connect(partial(self.action_open_url, self.dlg_cf, result))
         action_section.triggered.connect(partial(self.open_section_form))
         action_help.triggered.connect(partial(self.api_action_help, 'ud', 'node'))
+        ep = QgsMapToolEmitPoint(self.canvas)
+        action_interpolate.triggered.connect(partial(self.activate_snapping, ep))
 
         # Buttons
         btn_cancel = self.dlg_cf.findChild(QPushButton, 'btn_cancel')
