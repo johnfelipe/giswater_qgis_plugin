@@ -573,7 +573,8 @@ class ApiParent(ParentAction):
 
     def manage_lineedit(self, field, dialog, widget, completer):
         if field['widgettype'] == 'typeahead':
-
+            if 'queryText' not in field or 'fieldToSearch' not in field or 'queryTextFilter' not in field or 'parentId' not in field:
+                return widget
             model = QStringListModel()
             self.populate_lineedit(completer, model, field, dialog, widget)
             widget.textChanged.connect(partial(self.populate_lineedit, completer, model, field, dialog, widget))
@@ -888,7 +889,8 @@ class ApiParent(ParentAction):
                 widget = self.add_lineedit(field)
                 widget = self.set_widget_size(widget, field)
                 widget = self.set_data_type(field, widget)
-                widget = self.manage_lineedit(field, dialog, widget, completer)
+                if field['widgettype'] == 'typeahead':
+                    widget = self.manage_lineedit(field, dialog, widget, completer)
                 if widget.objectName() == field_id:
                     self.feature_id = widget.text()
             elif field['widgettype'] == 'datepickertime':

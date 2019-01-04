@@ -53,17 +53,15 @@ class Edit(ParentAction):
 
     def edit_add_feature(self, feature_cat):
         """ Button 01, 02: Add 'node' or 'arc' """
-        # self.api_parent = ApiParent(self.iface, self.settings, self.controller, self.plugin_dir)
 
-        if self.api_cf is not None:
-            msg = "estas a punto de perder tus cambios, guarda antes de continuar"
-            answer = self.controller.ask_question(msg, "Warning!")
-            print (answer)
-            if not answer:
-               return
-            else:
-                self.close_dialog(self.api_cf.dlg_cf)
-                self.api_cf = None
+        # if self.api_cf is not None:
+        #     msg = "Estas a punto de perder tus cambios, guarda antes de continuar"
+        #     answer = self.controller.ask_question(msg, "Warning!")
+        #     if not answer:
+        #        return
+        #     else:
+        #         self.close_dialog(self.api_cf.dlg_cf)
+        #         self.api_cf = None
 
         self.previous_map_tool = self.canvas.mapTool()
         self.controller.restore_info()
@@ -96,8 +94,13 @@ class Edit(ParentAction):
             self.controller.log_info(str(type("NO FEATURE TYPE DEFINED")))
 
         self.api_cf = ApiCF(self.iface, self.settings, self.controller, self.plugin_dir)
-        self.controller.api_cf = self.api_cf
-        self.api_cf.open_form(point=list_points, feature_cat=feature_cat, new_feature_id=feature_id, layer_new_feature=layer)
+        self.controller.api_on = self.api_cf
+        result, dialog = self.api_cf.open_form(point=list_points, feature_cat=feature_cat, new_feature_id=feature_id, layer_new_feature=layer)
+        if result is False:
+            self.api_cf = None
+            layer.deleteFeature(feature.id())
+            self.iface.actionRollbackEdits().trigger()
+
         #self.iface.actionPan().trigger()
 
     def get_feature_by_id(self, layer, id_):

@@ -163,7 +163,6 @@ class ApiCF(ApiParent):
 
     def draw_by_action(self, feature, reset_rb=True):
         """ Draw lines based on geometry """
-        print(feature['geometry'])
         if feature['geometry'] is None:
             return
         list_coord = re.search('\((.*)\)', str(feature['geometry']))
@@ -266,6 +265,16 @@ class ApiCF(ApiParent):
                 self.controller.show_message(row[0]['message']['text'], 2)
                 return False
 
+        # Control fail when insert new feature
+        if 'status' in row[0]['body']['data']['fields']:
+            if row[0]['body']['data']['fields']['status'].lower() == 'failed':
+                msg = row[0]['body']['data']['fields']['message']['text']
+                priority = int(row[0]['body']['data']['fields']['message']['priority'])
+                self.controller.show_message(msg, message_level=priority)
+                self.controller.restore_info()
+                self.controller.show_message(msg, message_level=priority)
+                return False, False
+
         self.complet_result = row
 
         result = row[0]['body']['data']
@@ -277,12 +286,12 @@ class ApiCF(ApiParent):
             # Fill self.my_json for new feature
             if feature_cat is not None:
                 self.manage_new_feature(self.complet_result, dialog)
-            return result
+            return result, dialog
         elif self.complet_result[0]['body']['form']['template'] == 'custom feature':
             result, dialog = self.open_custom_form(feature_id, self.complet_result, tab_type)
             if feature_cat is not None:
                 self.manage_new_feature(self.complet_result, dialog)
-            return result
+            return result, dialog
 
     def manage_new_feature(self, complet_result, dialog):
         result = complet_result[0]['body']['data']
@@ -471,15 +480,14 @@ class ApiCF(ApiParent):
 
         plan_layout = self.dlg_cf.findChild(QGridLayout, 'plan_layout')
 
-
         # Get feature type as geom_type (node, arc, connec)
         self.geom_type = str(complet_result[0]['body']['feature']['featureType'])
         # Get field id name
         self.field_id = str(complet_result[0]['body']['feature']['idName'])
         self.feature_id = None
         result = complet_result[0]['body']['data']
-        for field in result['fields']:
 
+        for field in result['fields']:
             label, widget = self.set_widgets(self.dlg_cf, field)
             # Prepare layouts
             # Common layouts
@@ -609,7 +617,8 @@ class ApiCF(ApiParent):
             widget = self.set_widget_size(widget, field)
             widget = self.set_auto_update_lineedit(field, dialog, widget)
             widget = self.set_data_type(field, widget)
-            widget = self.manage_lineedit(field, dialog, widget, completer)
+            if field['widgettype'] == 'typeahead':
+                widget = self.manage_lineedit(field, dialog, widget, completer)
             if widget.property('column_id') == self.field_id:
                 self.feature_id = widget.text()
                 # Get selected feature
@@ -1217,7 +1226,7 @@ class ApiCF(ApiParent):
         api_cf = ApiCF(self.iface, self.settings, self.controller, self.plugin_dir)
         complet_result = api_cf.open_form(table_name=table_name, feature_id=feature_id)
         if not complet_result:
-            print("FAIL")
+            print("FAIL open_relation")
             return
         self.draw(complet_result)
 
@@ -1249,7 +1258,7 @@ class ApiCF(ApiParent):
         api_cf = ApiCF(self.iface, self.settings, self.controller, self.plugin_dir)
         complet_result = api_cf.open_form(table_name=table_name, feature_id=feature_id)
         if not complet_result:
-            print("FAIL")
+            print("FAIL open_up_down_stream")
             return
         self.draw(complet_result)
 
@@ -1286,7 +1295,7 @@ class ApiCF(ApiParent):
         api_cf = ApiCF(self.iface, self.settings, self.controller, self.plugin_dir)
         complet_result = api_cf.open_form(table_name=table_name, feature_id=feature_id)
         if not complet_result:
-            print("FAIL")
+            print("FAIL open_selected_hydro")
             return
 
 
@@ -2052,7 +2061,7 @@ class ApiCF(ApiParent):
         api_cf = ApiCF(self.iface, self.settings, self.controller, self.plugin_dir)
         complet_result = api_cf.open_form(table_name=table_name, feature_id=feature_id)
         if not complet_result:
-            print("FAIL")
+            print("FAIL open_rpt_result")
             return
         self.draw(complet_result)
 
@@ -2264,7 +2273,7 @@ class ApiCF(ApiParent):
         self.ApiCF = ApiCF(self.iface, self.settings, self.controller, self.plugin_dir)
         complet_result = self.ApiCF.open_form(table_name='ve_node', feature_id=feature_id)
         if not complet_result:
-            print("FAIL")
+            print("FAIL open_node")
             return
         self.draw(complet_result)
 
