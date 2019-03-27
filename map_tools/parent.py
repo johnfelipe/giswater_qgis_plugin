@@ -16,10 +16,12 @@
  ***************************************************************************/
 
 """
+from __future__ import absolute_import
 
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -35,16 +37,32 @@ else:
     
 from qgis.core import QgsPoint, QgsExpression
 from qgis.gui import QgsMapTool, QgsVertexMarker, QgsRubberBand
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from giswater.map_tools.snapping_utils_v2 import SnappingConfigManager
+else:
+    from qgis.core import QgsWkbTypes
+    from giswater.map_tools.snapping_utils_v3 import SnappingConfigManager
+
+from qgis.core import QgsPoint, QgsExpression
+from qgis.gui import QgsMapTool, QgsVertexMarker, QgsRubberBand
+from qgis.PyQt.QtCore import Qt, QPoint
+from qgis.PyQt.QtGui import QCursor, QColor, QIcon, QPixmap
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 import ctypes
 import os
 import sys
+if 'nt' in sys.builtin_module_names:
+    import ctypes
 
 from giswater.map_tools.snapping_utils import SnappingConfigManager
 
 
 class ParentMapTool(QgsMapTool):
-
 
     def __init__(self, iface, settings, action, index_action):  
         """ Class constructor """
@@ -72,7 +90,11 @@ class ParentMapTool(QgsMapTool):
         self.setAction(action)
 
         # Snapper
+<<<<<<< HEAD
         self.snapper_manager = SnappingConfigManager(self.iface, self.controller)
+=======
+        self.snapper_manager = SnappingConfigManager(self.iface)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         self.snapper = self.snapper_manager.get_snapper()
         
         # Change map tool cursor
@@ -92,7 +114,11 @@ class ParentMapTool(QgsMapTool):
                  
         # Set default rubber band
         color_selection = QColor(254, 178, 76, 63)
+<<<<<<< HEAD
         if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:
+=======
+        if Qgis.QGIS_VERSION_INT < 29900:
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             self.rubber_band = QgsRubberBand(self.canvas, Qgis.Polygon)
         else:
             self.rubber_band = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
@@ -103,6 +129,7 @@ class ParentMapTool(QgsMapTool):
         
         self.force_active_layer = True
         
+<<<<<<< HEAD
         # Set default encoding 
         if Qgis.QGIS_VERSION_INT >= 21400 and Qgis.QGIS_VERSION_INT < 29900:
             reload(sys)
@@ -110,6 +137,12 @@ class ParentMapTool(QgsMapTool):
         # TODO: 3.x
         else:
             pass
+=======
+        # Set default encoding
+        if Qgis.QGIS_VERSION_INT < 29900:
+            reload(sys)
+            sys.setdefaultencoding('utf-8')   #@UndefinedVariable
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         
         
     def get_cursor_multiple_selection(self):
@@ -174,7 +207,19 @@ class ParentMapTool(QgsMapTool):
         try:
             self.iface.actionPan().trigger()     
         except Exception:          
-            pass  
+            pass
+
+
+    def reset_rubber_band(self):
+
+        try:
+            # Graphic elements
+            if Qgis.QGIS_VERSION_INT < 29900:
+                self.rubber_band.reset(Qgis.Polygon)
+            else:
+                self.rubber_band.reset(QgsWkbTypes.PolygonGeometry)
+        except:
+            pass
 
             
     def reset_rubber_band(self):
@@ -192,7 +237,11 @@ class ParentMapTool(QgsMapTool):
     def reset(self):
 
         self.reset_rubber_band()
+<<<<<<< HEAD
         self.snapped_feat = None
+=======
+        self.snapped_feat = None      
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         
     
     def cancel_map_tool(self):
@@ -209,9 +258,9 @@ class ParentMapTool(QgsMapTool):
     def remove_markers(self):
         """ Remove previous markers """
              
-        vertex_items = [i for i in self.canvas.scene().items() if issubclass(type(i), QgsVertexMarker)]
+        vertex_items = [i for i in list(self.canvas.scene().items()) if issubclass(type(i), QgsVertexMarker)]
         for ver in vertex_items:
-            if ver in self.canvas.scene().items():
+            if ver in list(self.canvas.scene().items()):
                 self.canvas.scene().removeItem(ver)
         
 
@@ -260,12 +309,20 @@ class ParentMapTool(QgsMapTool):
                     self.set_action_pan()
         except AttributeError:
             pass
+<<<<<<< HEAD
 
     def load_settings(self, dialog=None):
         """ Load QGIS settings related with dialog position and size """
         screens = ctypes.windll.user32
         screen_x = screens.GetSystemMetrics(78)
         screen_y = screens.GetSystemMetrics(79)
+=======
+
+
+    def load_settings(self, dialog=None):
+        """ Load QGIS settings related with dialog position and size """
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         if dialog is None:
             dialog = self.dlg
 
@@ -278,6 +335,12 @@ class ParentMapTool(QgsMapTool):
             if int(x) < 0 or int(y) < 0:
                 dialog.resize(int(width), int(height))
             else:
+<<<<<<< HEAD
+=======
+                screens = ctypes.windll.user32
+                screen_x = screens.GetSystemMetrics(78)
+                screen_y = screens.GetSystemMetrics(79)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                 if int(x) > screen_x:
                     x = int(screen_x) - int(width)
                 if int(y) > screen_y:
@@ -294,8 +357,8 @@ class ParentMapTool(QgsMapTool):
             dialog = self.dlg
             
         try:             
-            self.controller.plugin_settings_set_value(dialog.objectName() + "_width", dialog.width())
-            self.controller.plugin_settings_set_value(dialog.objectName() + "_height", dialog.height())
+            self.controller.plugin_settings_set_value(dialog.objectName() + "_width", dialog.property('width'))
+            self.controller.plugin_settings_set_value(dialog.objectName() + "_height", dialog.property('height'))
             self.controller.plugin_settings_set_value(dialog.objectName() + "_x", dialog.pos().x())
             self.controller.plugin_settings_set_value(dialog.objectName() + "_y", dialog.pos().y())  
         except:

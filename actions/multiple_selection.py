@@ -1,13 +1,13 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.
 """
-
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -23,6 +23,24 @@ else:
 
 from qgis.core import QgsFeatureRequest, QgsPoint, QgsRectangle
 from qgis.gui import QgsMapTool, QgsRubberBand
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from qgis.gui import QgsMapCanvasSnapper
+else:
+    from qgis.gui import QgsMapCanvas
+    from qgis.core import QgsWkbTypes
+    from builtins import next
+    from builtins import range
+
+from qgis.core import QgsFeatureRequest, QgsPoint, QgsRectangle
+from qgis.gui import QgsMapTool, QgsRubberBand
+from qgis.PyQt.QtCore import Qt, pyqtSignal, QPoint
+from qgis.PyQt.QtWidgets import QApplication
+from qgis.PyQt.QtGui import QColor
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 
 class MultipleSelection(QgsMapTool):
@@ -46,11 +64,15 @@ class MultipleSelection(QgsMapTool):
         QgsMapTool.__init__(self, self.canvas)
 
         self.controller = controller
+<<<<<<< HEAD
         if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:
             self.rubber_band = QgsRubberBand(self.canvas, Qgis.Polygon)
         else:
             self.rubber_band = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
 
+=======
+        self.rubber_band = QgsRubberBand(self.canvas, Qgis.Polygon)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         self.rubber_band.setColor(QColor(255, 100, 255))
         self.rubber_band.setFillColor(QColor(254, 178, 76, 63))
         self.rubber_band.setWidth(1)
@@ -72,6 +94,17 @@ class MultipleSelection(QgsMapTool):
         except:
             pass
 
+        return snapper
+
+
+    def get_snapper(self):
+        """ Return snapper """
+
+        if Qgis.QGIS_VERSION_INT < 29900:
+            snapper = QgsMapCanvasSnapper(self.canvas)
+        else:
+            # TODO: 3.x
+            snapper = QgsMapCanvas.snappingUtils()
         return snapper
 
 
@@ -114,7 +147,7 @@ class MultipleSelection(QgsMapTool):
         for i in range(len(self.layers)):
             
             layer = self.layers[i]
-            if (i == len(self.layers) - 1):     
+            if i == len(self.layers) - 1:
                 if self.mincut:                              
                     self.mincut.connect_signal_selection_changed("mincut_connec")
                 if self.parent_manage:                          
@@ -200,10 +233,18 @@ class MultipleSelection(QgsMapTool):
 
         try:
             # Graphic elements
+<<<<<<< HEAD
             if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:
+=======
+            if Qgis.QGIS_VERSION_INT < 29900:
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                 self.rubber_band.reset(Qgis.Polygon)
             else:
                 self.rubber_band.reset(QgsWkbTypes.PolygonGeometry)
         except:
             pass
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6

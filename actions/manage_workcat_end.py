@@ -1,13 +1,13 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.
 """
-
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -23,6 +23,22 @@ else:
     from qgis.PyQt.QtSql import QSqlTableModel
 
 from qgis.core import QgsExpression, QgsFeatureRequest
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from qgis.PyQt.QtGui import QStringListModel
+else:
+    from qgis.PyQt.QtCore import QStringListModel
+    from builtins import str
+    from builtins import range
+
+from qgis.core import QgsExpression, QgsFeatureRequest
+from qgis.PyQt.QtCore import Qt, QDate
+from qgis.PyQt.QtSql import QSqlTableModel
+from qgis.PyQt.QtWidgets import QAbstractItemView, QTableView, QCompleter
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 from functools import partial
 
@@ -81,7 +97,7 @@ class ManageWorkcatEnd(ParentManage):
         self.dlg_work_end.btn_accept.clicked.connect(partial(self.manage_workcat_end_accept))
         self.dlg_work_end.btn_cancel.clicked.connect(partial(self.manage_close, self.dlg_work_end, self.table_object, self.cur_active_layer,  force_downgrade=True))
         self.dlg_work_end.rejected.connect(partial(self.manage_close, self.dlg_work_end, self.table_object, self.cur_active_layer,  force_downgrade=True, show_warning=True))
-        self.dlg_work_end.workcat_id_end.currentIndexChanged.connect(partial(self.get_values_from_form, self.dlg_work_end))
+        self.dlg_work_end.workcat_id_end.editTextChanged.connect(partial(self.fill_workids))
         self.dlg_work_end.btn_new_workcat.clicked.connect(partial(self.new_workcat))
         self.dlg_work_end.btn_insert.clicked.connect(partial(self.insert_feature, self.dlg_work_end, self.table_object))
         self.dlg_work_end.btn_delete.clicked.connect(partial(self.delete_records, self.dlg_work_end, self.table_object))
@@ -105,6 +121,9 @@ class ManageWorkcatEnd(ParentManage):
         # Open dialog
         self.open_dialog(self.dlg_work_end, maximize_button=False)
 
+
+    # def filter_by_list(self, widget):
+    #     self.proxy_model.setFilterFixedString(widget.currentText())
 
     def set_edit_arc_downgrade_force(self, value):
         
@@ -162,6 +181,9 @@ class ManageWorkcatEnd(ParentManage):
         if row:
             utils_giswater.setText(self.dlg_work_end, self.dlg_work_end.descript, row['descript'])
             utils_giswater.setCalendarDate(self.dlg_work_end, self.dlg_work_end.builtdate, row['builtdate'], False)
+        else:
+            utils_giswater.setText(self.dlg_work_end, self.dlg_work_end.descript, '')
+            utils_giswater.setCalendarDate(self.dlg_work_end, self.dlg_work_end.builtdate, None, False)
 
 
     def get_list_selected_id(self, qtable):
@@ -183,7 +205,6 @@ class ManageWorkcatEnd(ParentManage):
 
     def manage_workcat_end_accept(self):
         """ Get elements from all the tables and update his data """
-        
         if self.workcat_id_end == 'null' or self.workcat_id_end is None:
             message = "Please select a workcat id end"
             self.controller.show_warning(message)
@@ -258,10 +279,11 @@ class ManageWorkcatEnd(ParentManage):
     def fill_table(self, widget, table_name, filter_):
         """ Set a model with selected filter.
         Attach that model to selected table """
-
+        if self.schema_name not in table_name:
+            table_name = self.schema_name + "." + table_name
         # Set model
         self.model = QSqlTableModel()
-        self.model.setTable(self.schema_name+"."+table_name)
+        self.model.setTable(table_name)
         self.model.setEditStrategy(QSqlTableModel.OnManualSubmit)
         if filter_:
             self.model.setFilter(filter_)

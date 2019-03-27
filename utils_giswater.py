@@ -1,5 +1,5 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU 
 General Public License as published by the Free Software Foundation, either version 3 of the License, 
 or (at your option) any later version.
@@ -7,6 +7,7 @@ or (at your option) any later version.
 
 # -*- coding: utf-8 -*-
 """ Module with utility functions to interact with dialog and its widgets """
+<<<<<<< HEAD
 try:
     from qgis.core import Qgis
 except:
@@ -32,11 +33,40 @@ else:
 
 from qgis.gui import QgsDateTimeEdit
 
+=======
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+
+try:
+    from qgis.core import Qgis
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from qgis.PyQt.QtGui import QStringListModel
+else:
+    from qgis.PyQt.QtCore import QStringListModel
+    
+from qgis.gui import QgsDateTimeEdit
+
+from qgis.PyQt.QtCore import QSortFilterProxyModel, QDate, QDateTime, QTime, Qt
+from qgis.PyQt.QtGui import QPixmap, QDoubleValidator
+from qgis.PyQt.QtWidgets import QLineEdit, QComboBox, QWidget, QDoubleSpinBox, QCheckBox, QLabel, QTextEdit, QDateEdit
+from qgis.PyQt.QtWidgets import QAbstractItemView, QCompleter, QDateTimeEdit, QTableView, QSpinBox, QTimeEdit, QPushButton
+
+from functools import partial
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 import os
 import operator
+<<<<<<< HEAD
 from functools import partial
 
 from actions.HyperLinkLabel import HyperLinkLabel
+=======
+if 'nt' in sys.builtin_module_names:
+    import winreg
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 
 def setDialog(p_dialog):
@@ -55,7 +85,7 @@ def fillComboBox(dialog, widget, rows, allow_nulls=True, clear_combo=True):
 
     if rows is None:
         return
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QComboBox, widget)
     if clear_combo:
         widget.clear()
@@ -80,7 +110,7 @@ def fillComboBox(dialog, widget, rows, allow_nulls=True, clear_combo=True):
 
 def fillComboBoxList(dialog, widget, list_object, allow_nulls=True, clear_combo=True):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QComboBox, widget)
     if widget is None:
         return None
@@ -102,7 +132,7 @@ def fillWidgets(rows, index_widget=0, index_text=1):
 
 def getText(dialog, widget, return_string_null=True):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if widget:
         if type(widget) is QLineEdit or type(widget) is QPushButton or type(widget) is QLabel \
@@ -128,12 +158,12 @@ def getText(dialog, widget, return_string_null=True):
 
 def setText(dialog, widget, text):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if not widget:
         return
 
-    value = unicode(text)
+    value = str(text)
     if type(widget) is QLineEdit or type(widget) is QTextEdit or type(widget) is QLabel:
         if value == 'None':
             value = ""
@@ -147,7 +177,7 @@ def setText(dialog, widget, text):
 def getCalendarDate(dialog, widget, date_format = "yyyy/MM/dd", datetime_format = "yyyy/MM/dd hh:mm:ss"):
 
     date = None
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if not widget:
         return
@@ -165,7 +195,12 @@ def getCalendarDate(dialog, widget, date_format = "yyyy/MM/dd", datetime_format 
 
 
 def setCalendarDate(dialog, widget, date, default_current_date=True):
+<<<<<<< HEAD
     if type(widget) is str or type(widget) is unicode:
+=======
+
+    if type(widget) is str or type(widget) is str:
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         widget = dialog.findChild(QWidget, widget)
     if not widget:
         return
@@ -186,7 +221,7 @@ def setCalendarDate(dialog, widget, date, default_current_date=True):
 
 def setTimeEdit(dialog, widget, time):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if not widget:
         return
@@ -198,7 +233,7 @@ def setTimeEdit(dialog, widget, time):
 
 def getWidget(dialog, widget):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if not widget:
         return None
@@ -207,7 +242,7 @@ def getWidget(dialog, widget):
 
 def getWidgetType(dialog, widget):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if not widget:
         return None
@@ -216,7 +251,7 @@ def getWidgetType(dialog, widget):
 
 def getWidgetText(dialog, widget, add_quote=False, return_string_null=True):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if not widget:
         return None
@@ -234,7 +269,7 @@ def getWidgetText(dialog, widget, add_quote=False, return_string_null=True):
 
 def setWidgetText(dialog, widget, text):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if not widget:
         return
@@ -248,7 +283,7 @@ def setWidgetText(dialog, widget, text):
 
 def isChecked(dialog, widget):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QCheckBox, widget)
     checked = False
     if widget:
@@ -258,7 +293,7 @@ def isChecked(dialog, widget):
 
 def setChecked(dialog, widget, checked=True):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if not widget:
         return
@@ -268,7 +303,7 @@ def setChecked(dialog, widget, checked=True):
 
 def getSelectedItem(dialog, widget, return_string_null=True):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QComboBox, widget)
     if return_string_null:
         widget_text = "null"
@@ -282,7 +317,7 @@ def getSelectedItem(dialog, widget, return_string_null=True):
 
 def setSelectedItem(dialog, widget, text):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QComboBox, widget)
     if widget:
         index = widget.findText(text)
@@ -293,7 +328,7 @@ def setSelectedItem(dialog, widget, text):
 
 def setCurrentIndex(dialog, widget, index):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QComboBox, widget)
     if widget:
         if index == -1:
@@ -303,7 +338,7 @@ def setCurrentIndex(dialog, widget, index):
 
 def setWidgetVisible(dialog, widget, visible=True):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if widget:
         widget.setVisible(visible)
@@ -311,7 +346,7 @@ def setWidgetVisible(dialog, widget, visible=True):
 
 def setWidgetEnabled(dialog, widget, enabled=True):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if widget:
         widget.setEnabled(enabled)
@@ -321,7 +356,7 @@ def setImage(dialog, widget,cat_shape):
     """ Set pictures for UD"""
 
     element = cat_shape.lower()
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if not widget:
         return
@@ -335,14 +370,14 @@ def setImage(dialog, widget,cat_shape):
 
 def fillWidget(dialog, widget, row):
 
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if not widget:
         return
     key = widget.objectName()
     if key in row:
         if row[key] is not None:
-            value = unicode(row[key])
+            value = str(row[key])
             if type(widget) is QLineEdit or type(widget) is QTextEdit:
                 if value == 'None':
                     value = ""
@@ -392,7 +427,7 @@ def get_settings_value(settings, parameter):
 
 def set_table_selection_behavior(dialog, widget):
     """ Set selection behavior of @widget """
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if not widget:
         return
@@ -439,7 +474,7 @@ def get_item_data(dialog, widget, index=0):
     """ Get item data of current index of the @widget """
 
     code = -1
-    if type(widget) is str or type(widget) is unicode:
+    if type(widget) is str or type(widget) is str:
         widget = dialog.findChild(QWidget, widget)
     if widget:
         if type(widget) is QComboBox:
@@ -468,7 +503,9 @@ def set_item_data(combo, rows, index_to_show=0, combo_clear=True, sort_combo=Tru
     if rows is None:
         return
     for row in rows:
-        elem = [row[0], row[1]]
+        elem = []
+        for x in range(0, len(row)):
+            elem.append(row[x])
         records.append(elem)
 
     combo.blockSignals(True)
@@ -499,6 +536,25 @@ def double_validator(widget, min_=0, max_=999999, decimals=3, notation=QDoubleVa
     widget.setValidator(validator)
 
 
+<<<<<<< HEAD
+=======
+def dis_enable_dialog(dialog, enable, ignore_widgets=['', None]):
+    widget_list = dialog.findChildren(QWidget)
+    for widget in widget_list:
+        if str(widget.objectName()) not in ignore_widgets:
+            if type(widget) in (QSpinBox, QDoubleSpinBox, QLineEdit):
+                widget.setReadOnly(not enable)
+                if enable:
+                    widget.setStyleSheet("QWidget { background: rgb(255, 255, 255);"
+                                         " color: rgb(0, 0, 0)}")
+                else:
+                    widget.setStyleSheet("QWidget { background: rgb(242, 242, 242);"
+                                         " color: rgb(100, 100, 100)}")
+            elif type(widget) in (QComboBox, QCheckBox, QPushButton, QgsDateTimeEdit):
+                widget.setEnabled(enable)
+
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 def set_qtv_config(widget, selection=QAbstractItemView.SelectRows, edit_triggers=QTableView.NoEditTriggers):
     """ Set QTableView configurations """
     widget.setSelectionBehavior(selection)
@@ -512,4 +568,9 @@ def get_col_index_by_col_name(qtable, column_name):
         if qtable.model().headerData(x, Qt.Horizontal) == column_name:
             column_index = x
             break
+<<<<<<< HEAD
     return column_index
+=======
+    return column_index
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6

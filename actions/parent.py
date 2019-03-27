@@ -1,13 +1,15 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU 
 General Public License as published by the Free Software Foundation, either version 3 of the License, 
 or (at your option) any later version.
 """
-
+from future import standard_library
+standard_library.install_aliases()
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -32,9 +34,40 @@ import ctypes
 import os
 import sys
 import webbrowser
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    import ConfigParser as configparser
+    from qgis.PyQt.QtGui import QStringListModel
+    from qgis.core import QgsMapLayerRegistry as QgsProject
+    from qgis.gui import QgsMapCanvasSnapper
+else:
+    import configparser
+    from qgis.PyQt.QtCore import QStringListModel
+    from qgis.core import QgsProject
+    from qgis.gui import QgsMapCanvas
+    from builtins import range
+    from builtins import object
+
+from qgis.core import QgsExpression, QgsFeatureRequest, QgsRectangle
+from qgis.PyQt.QtCore import Qt, QSettings
+from qgis.PyQt.QtWidgets import QAbstractItemView, QTableView, QFileDialog, QApplication, QCompleter, QAction
+from qgis.PyQt.QtGui import QIcon, QCursor, QPixmap
+from qgis.PyQt.QtSql import QSqlTableModel, QSqlQueryModel
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 from functools import partial
 
-import utils_giswater    
+import sys
+
+if 'nt' in sys.builtin_module_names:
+    import ctypes
+
+import os
+import utils_giswater
+import webbrowser
 
 
 class ParentAction(object):
@@ -327,9 +360,13 @@ class ParentAction(object):
 
     def load_settings(self, dialog=None):
         """ Load QGIS settings related with dialog position and size """
+<<<<<<< HEAD
         screens = ctypes.windll.user32
         screen_x = screens.GetSystemMetrics(78)
         screen_y = screens.GetSystemMetrics(79)
+=======
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         if dialog is None:
             dialog = self.dlg
                     
@@ -342,6 +379,12 @@ class ParentAction(object):
             if int(x) < 0 or int(y) < 0:
                 dialog.resize(int(width), int(height))
             else:
+<<<<<<< HEAD
+=======
+                screens = ctypes.windll.user32
+                screen_x = screens.GetSystemMetrics(78)
+                screen_y = screens.GetSystemMetrics(79)                
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                 if int(x) > screen_x:
                     x = int(screen_x) - int(width)
                 if int(y) > screen_y:
@@ -355,6 +398,10 @@ class ParentAction(object):
         """ Save QGIS settings related with dialog position and size """
         if dialog is None:
             dialog = self.dlg
+<<<<<<< HEAD
+=======
+            
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         self.controller.plugin_settings_set_value(dialog.objectName() + "_width", dialog.property('width'))
         self.controller.plugin_settings_set_value(dialog.objectName() + "_height", dialog.property('height'))
         self.controller.plugin_settings_set_value(dialog.objectName() + "_x", dialog.pos().x()+8)
@@ -514,10 +561,11 @@ class ParentAction(object):
 
     def fill_table_psector(self, widget, table_name, set_edit_strategy=QSqlTableModel.OnManualSubmit):
         """ Set a model with selected @table_name. Attach that model to selected table """
-        
+        if self.schema_name not in table_name:
+            table_name = self.schema_name + "." + table_name
         # Set model
         self.model = QSqlTableModel()
-        self.model.setTable(self.schema_name+"."+table_name)
+        self.model.setTable(table_name)
         self.model.setEditStrategy(set_edit_strategy)
         self.model.setSort(0, 0)
         self.model.select()
@@ -533,10 +581,11 @@ class ParentAction(object):
     def fill_table(self, widget, table_name, set_edit_strategy=QSqlTableModel.OnManualSubmit):
         """ Set a model with selected filter.
         Attach that model to selected table """
-
+        if self.schema_name not in table_name:
+            table_name = self.schema_name + "." + table_name
         # Set model
         self.model = QSqlTableModel()
-        self.model.setTable(self.schema_name+"."+table_name)
+        self.model.setTable(table_name)
         self.model.setEditStrategy(set_edit_strategy)
         self.model.setSort(0, 0)
         self.model.select()
@@ -807,6 +856,7 @@ class ParentAction(object):
         model = QStringListModel()
         model.setStringList(row)
         self.completer.setModel(model)
+<<<<<<< HEAD
         
         
     def get_snapper(self):
@@ -832,4 +882,62 @@ class ParentAction(object):
                 self.canvas.xyCoordinates.disconnect()
                 self.xyCoordinates_conected = None
 
+=======
+
+
+    def zoom_to_rectangle(self, x1, y1, x2, y2, margin=5):
+        # rect = QgsRectangle(float(x1)+10, float(y1)+10, float(x2)-10, float(y2)-10)
+        rect = QgsRectangle(float(x1)-margin, float(y1)-margin, float(x2)+margin, float(y2)+margin)
+        self.canvas.setExtent(rect)
+        self.canvas.refresh()
+
+
+    def create_action(self, action_name, action_group, icon_num=None, text=None):
+        """ Creates a new action with selected parameters """
+
+        icon = None
+        icon_folder = self.plugin_dir + '/icons/'
+        icon_path = icon_folder + icon_num + '.png'
+        if os.path.exists(icon_path):
+            icon = QIcon(icon_path)
+
+        if icon is None:
+            action = QAction(text, action_group)
+        else:
+            action = QAction(icon, text, action_group)
+        action.setObjectName(action_name)
+
+        return action
+
+
+    def set_wait_cursor(self):
+        QApplication.instance().setOverrideCursor(Qt.WaitCursor)
+
+
+    def set_arrow_cursor(self):
+        QApplication.instance().setOverrideCursor(Qt.ArrowCursor)
+
+
+    def delete_layer_from_toc(self, layer_name):
+        """ Delete layer from toc if exist """
+        layer = None
+        for lyr in list(QgsProject.instance().mapLayers().values()):
+            if lyr.name() == layer_name:
+                layer = lyr
+                break
+        if layer is not None:
+            QgsProject.instance().removeMapLayer(layer)
+
+
+    def get_snapper(self):
+        """ Return snapper """
+
+        if Qgis.QGIS_VERSION_INT < 29900:
+            snapper = QgsMapCanvasSnapper(self.canvas)
+        else:
+            # TODO: 3.x
+            snapper = QgsMapCanvas.snappingUtils()
+
+        return snapper
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 

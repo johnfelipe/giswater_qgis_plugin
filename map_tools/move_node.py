@@ -16,10 +16,13 @@
  ***************************************************************************/
 
 """
+from builtins import str
+from builtins import next
 
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -31,6 +34,14 @@ else:
     
 from qgis.core import QgsPoint, QgsMapToPixel, QgsFeatureRequest
 from qgis.gui import QgsVertexMarker
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+from qgis.core import QgsPoint, QgsMapToPixel, QgsFeatureRequest
+from qgis.gui import QgsVertexMarker
+from qgis.PyQt.QtCore import QPoint, Qt
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 from map_tools.parent import ParentMapTool
 
@@ -57,11 +68,7 @@ class MoveNodeMapTool(ParentMapTool):
                " WHERE node_id = '" + node_id + "'")
         status = self.controller.execute_sql(sql) 
         if status:
-            # Show message before executing
-            message = ("The procedure will delete features on database." 
-                       " Please ensure that features has no undelete value on true."
-                       " On the other hand you must know that traceability table will storage precedent information.")
-            self.controller.show_info_box(message, "Info")
+
             
             # Execute SQL function and show result to the user
             function_name = "gw_fct_arc_divide"
@@ -147,10 +154,14 @@ class MoveNodeMapTool(ParentMapTool):
             self.iface.setActiveLayer(self.active_layer)           
 
         try:
+<<<<<<< HEAD
             if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:
                 self.rubber_band.reset(Qgis.Line)
             else:
                 self.rubber_band.reset(QgsWkbTypes.LineGeometry)
+=======
+            self.rubber_band.reset(Qgis.Line)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         except AttributeError:
             pass
 
@@ -268,7 +279,14 @@ class MoveNodeMapTool(ParentMapTool):
                     node_id = self.snapped_feat.attribute('node_id')
 
                     # Move selected node to the released point
-                    self.move_node(node_id, point)
+                    # Show message before executing
+                    message = ("The procedure will delete features on database."
+                               " Please ensure that features has no undelete value on true."
+                               " On the other hand you must know that traceability table will storage precedent information.")
+                    title = "Info"
+                    answer = self.controller.ask_question(message, title)
+                    if answer:
+                        self.move_node(node_id, point)
 
         
         elif event.button() == Qt.RightButton:

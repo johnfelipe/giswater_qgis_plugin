@@ -1,5 +1,5 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.
@@ -8,6 +8,7 @@ or (at your option) any later version.
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -20,6 +21,22 @@ else:
     from qgis.PyQt.QtGui import QDoubleValidator    
     from qgis.PyQt.QtWidgets import QDateEdit, QLineEdit, QTableView, QAbstractItemView
     from qgis.PyQt.QtSql import QSqlTableModel 
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from qgis.PyQt.QtGui import QStringListModel
+else:
+    from qgis.PyQt.QtCore import QStringListModel
+    from builtins import str
+    from builtins import range
+
+from qgis.PyQt.QtWidgets import QDateEdit, QLineEdit, QTableView, QAbstractItemView
+from qgis.PyQt.QtGui import QDoubleValidator
+from qgis.PyQt.QtSql import QSqlTableModel
+from qgis.PyQt.QtCore import Qt
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 import operator
 from functools import partial
@@ -225,7 +242,7 @@ class Master(ParentAction):
         self.dlg_psector_selector = Multirow_selector()
         self.load_settings(self.dlg_psector_selector)
         self.dlg_psector_selector.btn_ok.clicked.connect(partial(self.close_dialog, self.dlg_psector_selector))
-        self.dlg_psector_selector.setWindowTitle("Psector")
+        self.dlg_psector_selector.setWindowTitle("Psector selector")
         utils_giswater.setWidgetText(self.dlg_psector_selector, self.dlg_psector_selector.lbl_filter, 
             self.controller.tr('Filter by: Psector name', context_name='labels'))
         utils_giswater.setWidgetText(self.dlg_psector_selector, self.dlg_psector_selector.lbl_unselected, 

@@ -1,13 +1,13 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.
 """
-
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -22,6 +22,25 @@ else:
     from qgis.PyQt.QtGui import QDoubleValidator, QIntValidator, QKeySequence
     from qgis.PyQt.QtWidgets import QAbstractItemView, QTableView, QCheckBox, QLineEdit, QComboBox, QDateEdit, QLabel, QCompleter
     from qgis.PyQt.QtSql import QSqlQueryModel, QSqlTableModel
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from qgis.core import QgsComposition
+    from qgis.PyQt.QtGui import QStringListModel
+else:
+    from qgis.PyQt.QtCore import QStringListModel
+    from builtins import str
+    from builtins import range
+
+from qgis.core import QgsRectangle, QgsPoint
+from qgis.PyQt.QtWidgets import QAbstractItemView, QTableView, QCompleter
+from qgis.PyQt.QtGui import QDoubleValidator, QIntValidator, QKeySequence
+from qgis.PyQt.QtWidgets import QCheckBox, QLineEdit, QComboBox, QDateEdit, QLabel
+from qgis.PyQt.QtSql import QSqlQueryModel, QSqlTableModel
+from qgis.PyQt.QtCore import Qt
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 import os
 import sys
@@ -29,6 +48,7 @@ import csv
 import operator
 import subprocess
 import webbrowser
+import subprocess
 from functools import partial
 
 import utils_giswater
@@ -54,7 +74,7 @@ class ManageNewPsector(ParentManage):
 
         self.load_settings(self.dlg_plan_psector)
         self.plan_om = str(plan_om)
-        self.dlg_plan_psector.setWindowTitle(self.plan_om + " psector")
+        # self.dlg_plan_psector.setWindowTitle(self.plan_om + " psector")
         
         # Capture the current layer to return it at the end of the operation
         cur_active_layer = self.iface.activeLayer()
@@ -188,7 +208,7 @@ class ManageNewPsector(ParentManage):
             row = self.controller.get_row(sql)
             if not row:
                 return
-            
+            self.dlg_plan_psector.setWindowTitle("Plan psector - " + str(row['name']))
             self.psector_id.setText(str(row['psector_id']))
             sql = ("SELECT name FROM " + self.schema_name + ".plan_psector_cat_type WHERE id = " + str(row['psector_type']))
             result = self.controller.get_row(sql)
@@ -248,7 +268,24 @@ class ManageNewPsector(ParentManage):
             if not is_valid:
                 return
             self.select_features_by_expr(layer, expr)
-            self.zoom_to_selected_features(layer)
+
+            # Get canvas extend in order to create a QgsRectangle
+            ext = self.canvas.extent()
+            startPoint = QgsPoint(ext.xMinimum(), ext.yMaximum())
+            endPoint = QgsPoint(ext.xMaximum(), ext.yMinimum())
+            canvas_rec = QgsRectangle(startPoint, endPoint)
+            canvas_width = ext.xMaximum() - ext.xMinimum()
+            canvas_height = ext.yMaximum() - ext.yMinimum()
+
+            # Get boundingBox(QgsRectangle) from selected feature
+            feature = layer.selectedFeatures()[0]
+            psector_rec = feature.geometry().boundingBox()
+
+            # Do zoom when QgsRectangles don't intersect
+            if not canvas_rec.intersects(psector_rec):
+                self.zoom_to_selected_features(layer)
+            if psector_rec.width() < (canvas_width * 10)/100 or psector_rec.height() < (canvas_height * 10)/100:
+                self.zoom_to_selected_features(layer)
             layer.removeSelection()
 
             filter_ = "psector_id = '" + str(psector_id) + "'"
@@ -335,17 +372,19 @@ class ManageNewPsector(ParentManage):
 
     def update_total(self, dialog, qtable):
         """ Show description of product plan/om _psector as label """
-        
-        selected_list = qtable.model()
-        if selected_list is None:
-            return
-        total = 0
-        psector_id = utils_giswater.getWidgetText(dialog, 'psector_id')
-        for x in range(0, selected_list.rowCount()):
-            if int(qtable.model().record(x).value('psector_id')) == int(psector_id):
-                if str(qtable.model().record(x).value('total_budget')) != 'NULL':
-                    total += float(qtable.model().record(x).value('total_budget'))
-        utils_giswater.setText(dialog, 'lbl_total', str(total))
+        try:
+            selected_list = qtable.model()
+            if selected_list is None:
+                return
+            total = 0
+            psector_id = utils_giswater.getWidgetText(dialog, 'psector_id')
+            for x in range(0, selected_list.rowCount()):
+                if int(qtable.model().record(x).value('psector_id')) == int(psector_id):
+                    if str(qtable.model().record(x).value('total_budget')) != 'NULL':
+                        total += float(qtable.model().record(x).value('total_budget'))
+            utils_giswater.setText(dialog, 'lbl_total', str(total))
+        except:
+            pass
 
 
     def open_dlg_rapports(self, previous_dialog):#, self.dlg_plan_psector
@@ -361,7 +400,7 @@ class ManageNewPsector(ParentManage):
 
         self.dlg_psector_rapport.btn_cancel.clicked.connect(partial(self.close_dialog, self.dlg_psector_rapport))
         self.dlg_psector_rapport.btn_ok.clicked.connect(partial(self.generate_rapports))
-        self.dlg_psector_rapport.btn_path.clicked.connect(partial(self.get_folder_dialog, self.dlg_psector_rapport.txt_path))
+        self.dlg_psector_rapport.btn_path.clicked.connect(partial(self.get_folder_dialog, self.dlg_psector_rapport, self.dlg_psector_rapport.txt_path))
 
         utils_giswater.setWidgetText(self.dlg_psector_rapport, self.dlg_psector_rapport.txt_path,
             self.controller.plugin_settings_value('psector_rapport_path'))
@@ -460,7 +499,11 @@ class ManageNewPsector(ParentManage):
 
     def generate_composer(self, path):
 
+<<<<<<< HEAD
         if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:
+=======
+        if Qgis.QGIS_VERSION_INT < 29900:
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             index = utils_giswater.get_item_data(self.dlg_psector_rapport, self.dlg_psector_rapport.cmb_templates, 0)
             comp_view = self.iface.activeComposers()[index]
             my_comp = comp_view.composition()
@@ -1067,10 +1110,11 @@ class ManageNewPsector(ParentManage):
             1: OnRowChange
             2: OnManualSubmit
         """
-
+        if self.schema_name not in table_name:
+            table_name = self.schema_name + "." + table_name
         # Set model
         model = QSqlTableModel()
-        model.setTable(self.schema_name+"."+table_name)
+        model.setTable(table_name)
         model.setEditStrategy(QSqlTableModel.OnFieldChange)
         model.setSort(0, 0)
         model.select()

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.
 """
+from builtins import zip
+from builtins import object
 
 __author__ = 'Luigi Pirelli'
 __date__ = 'January 2018'
@@ -60,7 +62,7 @@ class Table(object):
         """Return the list of field names composing the table.
         Names are that exposed in the class not derived from the db table."""
         
-        fields = vars(self.__class__).keys()
+        fields = list(vars(self.__class__).keys())
         # remove all _<classname>__<name> or __<names>__ vars, e.g. private vars
         fields = [x for x in fields if "__" not in x]
         return fields
@@ -74,7 +76,7 @@ class Table(object):
             self.controller().show_info(message, parameter=self.pk)
             return False
 
-        fields = vars(self.__class__).keys()
+        fields = list(vars(self.__class__).keys())
         # remove all _<classname>__<name> or __<names>__ vars, e.g. private vars
         fields = [x for x in fields if "__" not in x]
 
@@ -99,7 +101,7 @@ class Table(object):
         """Save current event state in the DB as new record.
         Eventually add the record if it is not available"""
         
-        fields = vars(self.__class__).keys()
+        fields = list(vars(self.__class__).keys())
         # remove all _<classname>__<name> or __<names>__ vars, e.g. private vars
         fields = [x for x in fields if (("__" not in x) and (x != self.pk()))]
         values = [getattr(self, field) for field in fields]
@@ -107,7 +109,7 @@ class Table(object):
         # remove all None elements
         none_indexes = []
         for index, value in enumerate(values):
-            if not value:
+            if value in (None, '', 'null'):
                 none_indexes.append(index)
         for index in reversed(none_indexes):  # reversed to avoid change of index
             del fields[index]

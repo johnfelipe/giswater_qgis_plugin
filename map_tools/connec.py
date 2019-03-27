@@ -20,6 +20,7 @@
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -31,6 +32,14 @@ else:
     from qgis.PyQt.QtWidgets import QApplication
     
 from qgis.core import QgsPoint, QgsVectorLayer, QgsRectangle
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+from qgis.core import QgsPoint, QgsVectorLayer, QgsRectangle
+from qgis.PyQt.QtCore import QPoint, QRect, Qt
+from qgis.PyQt.QtWidgets import QApplication
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 from map_tools.parent import ParentMapTool
 
@@ -96,7 +105,11 @@ class ConnecMapTool(ParentMapTool):
     def canvasPressEvent(self, event):   #@UnusedVariable
 
         self.select_rect.setRect(0, 0, 0, 0)
+<<<<<<< HEAD
         self.reset_rubber_band()
+=======
+        self.rubber_band.reset(Qgis.Polygon)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 
     def canvasReleaseEvent(self, event):
@@ -266,7 +279,11 @@ class ConnecMapTool(ParentMapTool):
         ur = transform.toMapCoordinates(self.select_rect.right(), self.select_rect.top())
 
         # Rubber band
+<<<<<<< HEAD
         self.reset_rubber_band()
+=======
+        self.rubber_band.reset(Qgis.Polygon)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         self.rubber_band.addPoint(ll, False)
         self.rubber_band.addPoint(lr, False)
         self.rubber_band.addPoint(ur, False)

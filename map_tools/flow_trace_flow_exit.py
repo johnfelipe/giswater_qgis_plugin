@@ -16,6 +16,7 @@
  ***************************************************************************/
 
 """
+from builtins import next
 
 # -*- coding: utf-8 -*-
 try:
@@ -29,6 +30,10 @@ else:
     from qgis.PyQt.QtCore import QPoint, Qt
     
 from qgis.core import QgsPoint, QgsFeatureRequest, QgsExpression
+<<<<<<< HEAD
+=======
+from qgis.PyQt.QtCore import QPoint, Qt 
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 from map_tools.parent import ParentMapTool
 

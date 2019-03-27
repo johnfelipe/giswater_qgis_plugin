@@ -1,13 +1,15 @@
 """
 This file is part of Giswater 2.0
-The program is free software: you can redistribute it and/or modify it under the terms of the GNU 
-General Public License as published by the Free Software Foundation, either version 3 of the License, 
+The program is free software: you can redistribute it and/or modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.
 """
+
 
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -18,6 +20,18 @@ else:
     from qgis.PyQt.QtCore import QDate
     from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel    
     from qgis.PyQt.QtWidgets import QDateEdit, QFileDialog, QCheckBox, QDoubleSpinBox
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    pass
+else:
+    from builtins import range
+
+from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
+from qgis.PyQt.QtWidgets import QDateEdit, QFileDialog, QCheckBox, QDoubleSpinBox
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 import os
 import csv
@@ -26,6 +40,8 @@ from functools import partial
 from encodings.aliases import aliases
 
 import utils_giswater
+from giswater.actions.api_config import ApiConfig
+from giswater.actions.gw_toolbox import GwToolBox
 from giswater.actions.parent import ParentAction
 from giswater.actions.manage_visit import ManageVisit
 from giswater.ui_manager import Toolbox
@@ -38,6 +54,12 @@ class Utils(ParentAction):
     def __init__(self, iface, settings, controller, plugin_dir):
         """ Class to control toolbar 'om_ws' """
         ParentAction.__init__(self, iface, settings, controller, plugin_dir)
+<<<<<<< HEAD
+=======
+        
+        self.manage_visit = ManageVisit(iface, settings, controller, plugin_dir)
+        self.toolbox = GwToolBox(iface, settings, controller, plugin_dir)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 
     def set_project_type(self, project_type):
@@ -61,7 +83,7 @@ class Utils(ParentAction):
         role_admin = self.controller.check_role_user("role_admin")
         role_master = self.controller.check_role_user("role_master")
         role_edit = self.controller.check_role_user("role_edit")
-        
+
         # Manage user 'postgres'
         if self.controller.user == 'postgres' or self.controller.user == 'gisadmin':
             role_admin = True
@@ -81,18 +103,18 @@ class Utils(ParentAction):
         self.dlg_toolbox.rejected.connect(partial(self.close_dialog, self.dlg_toolbox))
 
         # Open dialog
-        self.open_dialog(self.dlg_toolbox, dlg_name='toolbox', maximize_button=False)  
-        
+        self.open_dialog(self.dlg_toolbox, dlg_name='toolbox', maximize_button=False)
+
 
     def utils_arc_topo_repair_accept(self):
         """ Button 19: Executes functions that are selected """
 
         # Delete previous values for current user
-        tablename = "selector_audit"        
+        tablename = "selector_audit"
         sql = ("DELETE FROM " + self.schema_name + "." + tablename + ""
                " WHERE cur_user = current_user;\n")
         self.controller.execute_sql(sql)
-        
+
         # Edit - Utils - Check project / data
         if self.dlg_toolbox.check_qgis_project.isChecked():
             sql = ("SELECT "+self.schema_name+".gw_fct_audit_check_project(1);")
@@ -157,7 +179,7 @@ class Utils(ParentAction):
         if self.dlg_toolbox.check_inverted_arcs.isChecked():
             sql = ("SELECT "+self.schema_name+".gw_fct_anl_arc_inverted();")
             self.controller.execute_sql(sql)
-            
+
         # Master - Prices
         if self.dlg_toolbox.check_reconstruction_price.isChecked():
             sql = ("SELECT "+self.schema_name+".gw_fct_plan_audit_check_data(15);")
@@ -246,7 +268,11 @@ class Utils(ParentAction):
 
 
     def disable_import_label(self, dialog):
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         csv2pgcat_id_aux = utils_giswater.get_item_data(dialog, dialog.cmb_import_type, 0)
         if csv2pgcat_id_aux == 4:
             dialog.txt_import.setEnabled(False)
@@ -260,7 +286,7 @@ class Utils(ParentAction):
         """ Populate combo with full list of codes """
 
         unicode_list = []
-        for item in aliases.items():
+        for item in list(aliases.items()):
             unicode_list.append(str(item[0]))
             sorted_list = sorted(unicode_list, key=str.lower)
         utils_giswater.set_autocompleter(combo, sorted_list)
@@ -486,7 +512,7 @@ class Utils(ParentAction):
             folder_path = os.path.dirname(__file__)
         os.chdir(folder_path)
         message = self.controller.tr("Select CSV file")
-        file_csv = QFileDialog.getOpenFileName(None, message, "", '*.csv')
+        file_csv, __ = QFileDialog.getOpenFileName(None, message, "", '*.csv')
         self.dlg_csv.txt_file_csv.setText(file_csv)
         self.save_settings_values()
         self.preview_csv(self.dlg_csv)
@@ -503,4 +529,11 @@ class Utils(ParentAction):
             sql = ("INSERT INTO " + self.schema_name + "." + tablename + " (fprocesscat_id, cur_user)"
                    " VALUES (" + str(fprocesscat_id) + ", current_user);")
         self.controller.execute_sql(sql)
+<<<<<<< HEAD
         
+=======
+
+
+    def utils_toolbox(self):
+        self.toolbox.open_toolbox()
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6

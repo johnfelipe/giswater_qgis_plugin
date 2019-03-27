@@ -1,13 +1,13 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU 
 General Public License as published by the Free Software Foundation, either version 3 of the License, 
 or (at your option) any later version.
 """
-
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -17,14 +17,28 @@ if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:
 else:
     from qgis.PyQt.QtCore import QDate, Qt
     from qgis.PyQt.QtWidgets import QTableView, QAbstractItemView, QLineEdit, QDateEdit, QPushButton
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    pass
+else:
+    from builtins import str
+    from builtins import range
+
+from qgis.PyQt.QtCore import QDate, Qt
+from qgis.PyQt.QtWidgets import QTableView, QAbstractItemView, QLineEdit, QDateEdit, QPushButton
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 from datetime import datetime
 from functools import partial
 
 import utils_giswater
-from giswater.actions.parent import ParentAction
+from giswater.actions.add_lot import AddNewLot
 from giswater.actions.manage_visit import ManageVisit
 from giswater.actions.manage_new_psector import ManageNewPsector
+from giswater.actions.parent import ParentAction
 from giswater.ui_manager import Psector_management
 from giswater.ui_manager import SelectorDate
 
@@ -34,6 +48,7 @@ class Om(ParentAction):
     def __init__(self, iface, settings, controller, plugin_dir):
         """ Class to control toolbar 'om_ws' """
         ParentAction.__init__(self, iface, settings, controller, plugin_dir)
+        self.new_lot = AddNewLot(iface, settings, controller, plugin_dir)
         self.manage_visit = ManageVisit(iface, settings, controller, plugin_dir)
         self.manage_new_psector = ManageNewPsector(iface, settings, controller, plugin_dir)
 
@@ -56,8 +71,12 @@ class Om(ParentAction):
 
     def om_add_visit(self):
         """ Button 64: Add visit """
+<<<<<<< HEAD
         self.controller.restore_info()
         self.manage_visit.manage_visit(is_new=True)
+=======
+        self.manage_visit.manage_visit()
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 
     def om_visit_management(self):
@@ -311,4 +330,14 @@ class Om(ParentAction):
         except:
             self.from_date = QDate.currentDate()
             self.to_date = QDate.currentDate().addDays(1)
-            
+
+
+    def om_add_lot(self):
+        """''' Button 74: Add new lot '''"""
+        self.new_lot.manage_lot()
+
+
+    def om_lot_management(self):
+        """ '''Button 75: Lot management '''"""
+        self.new_lot.lot_manager()
+

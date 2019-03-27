@@ -1,10 +1,14 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.
 """
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
 
+<<<<<<< HEAD
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
@@ -22,6 +26,27 @@ else:
     from qgis.PyQt.QtWidgets import QLabel, QPushButton, QLineEdit
     import urllib.parse as urlparse
     
+=======
+
+# -*- coding: utf-8 -*-
+try:
+    from qgis.core import Qgis
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    pass
+else:
+    from builtins import range
+
+from qgis.PyQt.QtWidgets import QLabel, QPushButton, QLineEdit
+from qgis.PyQt.QtGui import QPixmap
+from qgis.PyQt.QtCore import Qt
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
+
+from . import ExtendedQLabel
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 from functools import partial
 
 import giswater.actions.ExtendedQLabel
@@ -107,12 +132,12 @@ class ManageGallery(ParentManage):
                 # Set image to QLabel
 
                 # Parse a URL into components
-                url = urlparse.urlsplit(str(self.img_path_list[0][i]))
+                url = urllib.parse.urlsplit(str(self.img_path_list[0][i]))
 
                 # Check if path is URL
                 if url.scheme == "http" or url.scheme == "https":
                     url = str(self.img_path_list[0][i])
-                    data = urllib2.urlopen(url).read()
+                    data = urllib.request.urlopen(url).read()
                     pixmap = QPixmap()
                     pixmap.loadFromData(data)
                 else:
@@ -160,12 +185,12 @@ class ManageGallery(ParentManage):
         for i in range(0, 9):
 
             # Parse a URL into components
-            url = urlparse.urlsplit(str(self.img_path_list[self.start_indx][i]))
+            url = urllib.parse.urlsplit(str(self.img_path_list[self.start_indx][i]))
 
             # Check if path is URL
             if url.scheme == "http" or url.scheme == "https":
                 url = str(self.img_path_list[self.start_indx][i])
-                data = urllib2.urlopen(url).read()
+                data = urllib.request.urlopen(url).read()
                 pixmap = QPixmap()
                 pixmap.loadFromData(data)
             else:
@@ -197,12 +222,12 @@ class ManageGallery(ParentManage):
         for i in range(0, 9):
 
             # Parse a URL into components
-            url = urlparse.urlsplit(str(self.img_path_list[self.start_indx][i]))
+            url = urllib.parse.urlsplit(str(self.img_path_list[self.start_indx][i]))
 
             # Check if path is URL
             if url.scheme == "http" or url.scheme == "https":
                 url = str(self.img_path_list[self.start_indx][i])
-                data = urllib2.urlopen(url).read()
+                data = urllib.request.urlopen(url).read()
                 pixmap = QPixmap()
                 pixmap.loadFromData(data)
             else:
@@ -229,12 +254,12 @@ class ManageGallery(ParentManage):
         self.lbl_img = self.dlg_gallery_zoom.findChild(QLabel, "lbl_img_zoom")
 
         # Parse a URL into components
-        url = urlparse.urlsplit(str(self.img_path_list[self.start_indx][i]))
+        url = urllib.parse.urlsplit(str(self.img_path_list[self.start_indx][i]))
 
         # Check if path is URL
         if url.scheme == "http" or url.scheme == "https":
             url = str(self.img_path_list[self.start_indx][i])
-            data = urllib2.urlopen(url).read()
+            data = urllib.request.urlopen(url).read()
             pixmap = QPixmap()
             pixmap.loadFromData(data)
         else:
@@ -273,12 +298,12 @@ class ManageGallery(ParentManage):
         indx = (self.start_indx * 9) + self.i - 1
 
         # Parse a URL into components
-        url = urlparse.urlsplit(str(self.img_path_list1D[indx]))
+        url = urllib.parse.urlsplit(str(self.img_path_list1D[indx]))
 
         # Check if path is URL
         if url.scheme == "http" or url.scheme == "https":
             url = str(self.img_path_list1D[indx])
-            data = urllib2.urlopen(url).read()
+            data = urllib.request.urlopen(url).read()
             pixmap = QPixmap()
             pixmap.loadFromData(data)
         else:
@@ -300,12 +325,12 @@ class ManageGallery(ParentManage):
         indx = (self.start_indx * 9) + self.i + 1
 
         # Parse a URL into components
-        url = urlparse.urlsplit(str(self.img_path_list1D[indx]))
+        url = urllib.parse.urlsplit(str(self.img_path_list1D[indx]))
 
         # Check if path is URL
         if url.scheme == "http" or url.scheme == "https":
             url = str(self.img_path_list1D[indx])
-            data = urllib2.urlopen(url).read()
+            data = urllib.request.urlopen(url).read()
             pixmap = QPixmap()
             pixmap.loadFromData(data)
 

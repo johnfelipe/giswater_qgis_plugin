@@ -8,10 +8,14 @@
  *                                                                         *
  ***************************************************************************/
 """
+from __future__ import absolute_import
+from builtins import next
+from builtins import range
 
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -27,6 +31,19 @@ else:
     
 from qgis.core import QgsPoint, QgsFeatureRequest, QgsVectorLayer
 from qgis.gui import  QgsMapToolEmitPoint, QgsVertexMarker
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from qgis.core import QgsComposition
+
+from qgis.core import QgsPoint, QgsFeatureRequest, QgsVectorLayer
+from qgis.gui import  QgsMapToolEmitPoint
+from qgis.PyQt.QtCore import QPoint, Qt
+from qgis.PyQt.QtWidgets import QListWidget, QListWidgetItem, QLineEdit
+from qgis.PyQt.QtXml import QDomDocument
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 from functools import partial
 from decimal import Decimal
@@ -35,9 +52,15 @@ import math
 import os
 
 import utils_giswater
+<<<<<<< HEAD
 from giswater.map_tools.parent import ParentMapTool
 from giswater.ui_manager import DrawProfile
 from giswater.ui_manager import LoadProfiles
+=======
+from .parent import ParentMapTool
+from ui_manager import DrawProfile
+from ui_manager import LoadProfiles
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 
 class DrawProfiles(ParentMapTool):
@@ -343,9 +366,14 @@ class DrawProfiles(ParentMapTool):
     def activate_snapping(self, emit_point):
 
         self.canvas.setMapTool(emit_point)
+<<<<<<< HEAD
         snapper = self.snapper_manager.get_snapper()
 
         self.canvas.connect(self.canvas, SIGNAL("xyCoordinates(const QgsPoint&)"), self.mouse_move)
+=======
+        snapper = self.get_snapper()
+        self.canvas.xyCoordinates.connect(self.mouse_move)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         emit_point.canvasClicked.connect(partial(self.snapping_node, snapper))
 
 
@@ -354,11 +382,14 @@ class DrawProfiles(ParentMapTool):
         # Create the appropriate map tool and connect the gotPoint() signal.
         self.emit_point = QgsMapToolEmitPoint(self.canvas)
         self.canvas.setMapTool(self.emit_point)
+<<<<<<< HEAD
         self.snapper = self.snapper_manager.get_snapper()
+=======
+        self.snapper = self.get_snapper()
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
         self.iface.setActiveLayer(self.layer_node)
-        self.canvas.connect(self.canvas, SIGNAL("xyCoordinates(const QgsPoint&)"), self.mouse_move)
-
+        self.canvas.xyCoordinates.connect(self.mouse_move)
         # widget = clicked button
         # self.widget_start_point | self.widget_end_point : QLabels
         if str(widget.objectName()) == "btn_add_start_point":
@@ -573,6 +604,7 @@ class DrawProfiles(ParentMapTool):
         """ Get parameters from data base. Fill self.memory with parameters postgres """
 
         self.memory = []
+        test_id_list = []
         i = 0
         # Get parameters and fill the memory
         for node_id in self.node_id:
@@ -589,8 +621,7 @@ class DrawProfiles(ParentMapTool):
 
             if row:
                 if row[0] is None or row[1] is None or row[2] is None or row[3] is None or row[4] is None:
-                    message = "Some parameters are missing for node (Values Defaults used for)"
-                    self.controller.show_info_box(message, "Info", node_id)
+                    test_id_list.append(node_id)
                 # Check if we have all data for drawing
                 for x in range(0, len(columns)):
                     if row[x] is None:
@@ -614,8 +645,7 @@ class DrawProfiles(ParentMapTool):
             columns = ['geom1']
             if row:
                 if row[0] is None:
-                    message = "Some parameters are missing for node catalog (Values Defaults used for)"
-                    self.controller.show_info_box(message, "Info", node_id)
+                    test_id_list.append(node_id)
                 # Check if we have all data for drawing
                 for x in range(0, len(columns)):
                     if row[x] is None:
@@ -642,8 +672,7 @@ class DrawProfiles(ParentMapTool):
                 # Check if we have all data for drawing
                 if row[0] is None or row[1] is None or row[2] is None or row[3] is None or row[4] is None or \
                    row[5] is None or row[6] is None or row[7] is None:
-                    message = "Some parameters are missing for arc (Values Defaults used for)"
-                    self.controller.show_info_box(message, "Info", element_id)
+                    test_id_list.append(element_id)
                 for x in range(0, len(columns)):
                     if row[x] is None:
                         sql = ("SELECT value::decimal(12,3) FROM  " + self.schema_name + ".config_param_system WHERE parameter = '" + str(columns[x]) + "_vd'")
@@ -655,11 +684,13 @@ class DrawProfiles(ParentMapTool):
                 self.memory[n][5] = row[2]
                 self.memory[n][8] = row[3]
                 self.memory[n][9] = row[4]
-                self.memory[n][10] = row[5
-				]
+                self.memory[n][10] = row[5]
                 self.memory[n][11] = row[6]
                 self.memory[n][7] = row[7]
                 n = n + 1
+
+        message = "Some parameters are missing (Values Defaults used for)"
+        self.controller.show_info_box(message, "Info", str(test_id_list))
 
 
     def draw_first_node(self, start_point, top_elev, ymax, z1, z2, cat_geom1, geom1, indx): #@UnusedVariable
@@ -1270,7 +1301,11 @@ class DrawProfiles(ParentMapTool):
 
 
     def generate_composer(self):
-        
+
+        # TODO 3.x
+        if Qgis.QGIS_VERSION_INT > 29900:
+            return
+
         # Plugin path
         plugin_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         composers = self.iface.activeComposers()
@@ -1295,7 +1330,11 @@ class DrawProfiles(ParentMapTool):
         if index == num_comp:
             # Create new composer with template selected in combobox(self.template)
             template_path = plugin_path + "\\" + "templates" + "\\" + str(self.template) + ".qpt"
-            template_file = file(template_path, 'rt')
+            # TODO 3.x
+            if Qgis.QGIS_VERSION_INT < 29900:
+                template_file = file(template_path, 'rt')
+            else:
+                template_file = open(template_path, 'rt')
             template_content = template_file.read()
             template_file.close()
             document = QDomDocument()
@@ -1375,7 +1414,6 @@ class DrawProfiles(ParentMapTool):
         rotation = utils_giswater.getWidgetText(self.dlg_draw_profile, self.dlg_draw_profile.rotation)
 
         if self.rotation_vd_exist:
-            self.controller.log_info(str("test1") + str(rotation))
             if str(rotation) != 'null':
                 sql = ("UPDATE " + self.schema_name + "." + tablename + ""
                        " SET value = '" + str(rotation) + "'"

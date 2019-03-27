@@ -16,11 +16,21 @@
  ***************************************************************************/
 
 """
+<<<<<<< HEAD
 
 # -*- coding: utf-8 -*-
 from PyQt4.QtGui import QAction
 from qgis.core import QgsPoint, QgsFeatureRequest
 from PyQt4.QtCore import QPoint, Qt, QDate
+=======
+from builtins import next
+
+# -*- coding: utf-8 -*-
+from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtGui import QCursor
+from qgis.core import QgsPoint, QgsFeatureRequest
+from qgis.PyQt.QtCore import QPoint, Qt, QDate
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 from map_tools.parent import ParentMapTool
 
@@ -74,8 +84,11 @@ class OpenVisit(ParentMapTool):
             manage_visit.manage_visit(visit_id=visit_id)
 
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
     def activate(self):
         # Get current layer
         self.current_layer = self.iface.activeLayer()
@@ -99,7 +112,12 @@ class OpenVisit(ParentMapTool):
         self.iface.setActiveLayer(self.layer_visit)
 
         # Change cursor
+<<<<<<< HEAD
         self.canvas.setCursor(self.cursor)
+=======
+
+        self.canvas.setCursor(QCursor(Qt.WhatsThisCursor))
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
         # Show help message when action is activated
         if self.show_help:

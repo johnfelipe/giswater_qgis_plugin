@@ -75,6 +75,14 @@
         <translation>Gestor de visites</translation>
     </message>
     <message>
+        <source>74_text</source>
+        <translation>Afegir nou lot</translation>
+    </message>
+    <message>
+        <source>75_text</source>
+        <translation>Gestor de lots</translation>
+    </message>
+    <message>
         <source>81_text</source>
         <translation>Nou sector de planificació OM</translation>
     </message>
@@ -120,7 +128,7 @@
     </message>
     <message>
         <source>61_text</source>
-        <translation>Gestor del catàleg de treball</translation>
+        <translation>Informacio de la visita</translation>
     </message>
     <message>
         <source>66_text</source>

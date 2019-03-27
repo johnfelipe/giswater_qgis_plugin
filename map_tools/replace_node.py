@@ -1,13 +1,16 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU 
 General Public License as published by the Free Software Foundation, either version 3 of the License, 
 or (at your option) any later version.
 """
+from builtins import next
+from builtins import range
 
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -20,6 +23,19 @@ else:
     from qgis.PyQt.QtWidgets import QCompleter
 
 from qgis.core import QgsPoint, QgsFeatureRequest
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from qgis.PyQt.QtGui import QStringListModel
+else:
+    from qgis.PyQt.QtCore import QStringListModel
+
+from qgis.core import QgsPoint, QgsFeatureRequest
+from qgis.PyQt.QtWidgets import QCompleter
+from qgis.PyQt.QtCore import QPoint, Qt, QDate
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 from functools import partial
 from datetime import datetime

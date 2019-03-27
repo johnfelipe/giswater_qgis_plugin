@@ -1,15 +1,31 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU 
 General Public License as published by the Free Software Foundation, either version 3 of the License, 
 or (at your option) any later version.
 """
-
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+    from builtins import range
+    from builtins import object
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from qgis.core import QgsMapLayerRegistry as QgsProject, QgsDataSourceURI as QgsDataSourceUri
+else:
+    from qgis.core import QgsProject, QgsDataSourceUri
+
+from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt, QTranslator 
+from qgis.PyQt.QtWidgets import QCheckBox, QLabel, QMessageBox, QPushButton, QTabWidget, QToolBox
+from qgis.PyQt.QtSql import QSqlDatabase
+from qgis.core import QgsMessageLog, QgsCredentials
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:
     from PyQt4.Qt import QToolBox
@@ -36,7 +52,7 @@ from giswater.dao.pg_dao import PgDao
 from giswater.dao.logger import Logger
 
 
-class DaoController():
+class DaoController(object):
     
     def __init__(self, settings, plugin_name, iface, logger_name='plugin', create_logger=True):
         """ Class constructor """
@@ -50,13 +66,27 @@ class DaoController():
         self.logged = False 
         self.postgresql_version = None
         self.logger = None
+<<<<<<< HEAD
         self.basic_api_cf = None  # with this variable we know if the basic_info is active or not
         self.epa_api_cf = None  # with this variable we know if the epa_info is active or not
         self.api_on = None  # with this variable we know if the info is active or not and control all action.triggered
         self.previous_maptool = None
+=======
+        self.schema_name = None
+        self.dao = None
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         if create_logger:
             self.set_logger(logger_name)
                 
+        
+    def close_db(self):
+        """ Close database connection """
+                    
+        if self.dao:
+            if not self.dao.close_db():
+                self.log_info(str(self.last_error))
+            del self.dao
+        
         
     def set_giswater(self, giswater):
         self.giswater = giswater
@@ -78,6 +108,14 @@ class DaoController():
         log_suffix = self.settings.value('status/log_suffix') 
         self.logger = Logger(self, logger_name, log_level, log_suffix)   
         self.log_info("Logger initialized")   
+        
+                
+    def close_logger(self):
+        """ Close logger file """
+        
+        if self.logger:
+            self.logger.close_logger()
+            del self.logger        
         
                 
     def tr(self, message, context_name=None):
@@ -108,7 +146,7 @@ class DaoController():
         
     def check_actions(self, check=True):
         """ Utility to check/uncheck all actions """
-        for action_index, action in self.actions.iteritems():   #@UnusedVariable
+        for action_index, action in self.actions.items():   #@UnusedVariable
             action.setChecked(check)    
                     
                            
@@ -129,20 +167,27 @@ class DaoController():
         self.dao = None 
         self.last_error = None      
         self.log_codes = {}
+        self.logged = False
         
-        layer_source = self.get_layer_source_from_credentials()
-        if layer_source is None:
-            return False
+        self.layer_source, not_version = self.get_layer_source_from_credentials()
+        if self.layer_source:
+            if self.layer_source['db'] is None or self.layer_source['host'] is None or self.layer_source['user'] is None \
+                    or self.layer_source['password'] is None or self.layer_source['port'] is None:
+                return False, not_version
+        else:
+            return False, not_version
             
         # Connect to database
-        self.logged = self.connect_to_database(layer_source['host'], layer_source['port'], 
-                                               layer_source['db'], layer_source['user'], layer_source['password']) 
-                       
-        return self.logged    
+        self.logged = self.connect_to_database(self.layer_source['host'], self.layer_source['port'], 
+                                               self.layer_source['db'], self.layer_source['user'],
+                                               self.layer_source['password'])
+
+        return self.logged, not_version
     
     
     def get_layer_source_from_credentials(self):
 
+<<<<<<< HEAD
         # Get database parameters from layer 'version'
         layer = self.get_layer_by_tablename("version")
         if not layer:
@@ -170,6 +215,58 @@ class DaoController():
             
         return layer_source    
     
+=======
+        # Get database parameters from layer 'v_edit_node'
+        layer = self.get_layer_by_tablename("v_edit_node")
+        settings = QSettings()
+        settings.beginGroup("PostgreSQL/connections")
+
+        if layer is not None:
+            not_version = False
+            credentials = self.get_layer_source(layer)
+            self.schema_name = credentials['schema']
+            conn_info = QgsDataSourceUri(layer.dataProvider().dataSourceUri()).connectionInfo()
+            attempts = 1
+            logged = self.connect_to_database(credentials['host'], credentials['port'],
+                                              credentials['db'], credentials['user'], credentials['password'])
+            while not logged:
+                attempts += 1
+                if attempts <= 2:
+                    (success, credentials['user'], credentials['password']) = QgsCredentials.instance().get(conn_info, credentials['user'], credentials['password'])
+                    logged = self.connect_to_database(credentials['host'], credentials['port'],
+                                                      credentials['db'], credentials['user'], credentials['password'])
+                else:
+                    return None, not_version
+
+            # Put the credentials back (for yourself and the provider), as QGIS removes it when you "get" it
+            QgsCredentials.instance().put(conn_info, credentials['user'], credentials['password'])
+
+        elif settings is not None:
+            not_version = True
+            default_connection = settings.value('selected')
+            settings.endGroup()
+            credentials = {'db': None, 'schema': None, 'table': None,
+                           'host': None, 'port': None, 'user': None, 'password': None}
+            if default_connection:
+                settings.beginGroup("PostgreSQL/connections/" + default_connection)
+                credentials['host'] = settings.value('host')
+                credentials['port'] = settings.value('port')
+                credentials['db'] = settings.value('database')
+                credentials['user'] = settings.value('username')
+                credentials['password'] = settings.value('password')
+                settings.endGroup()
+            else:
+                self.last_error = self.tr("Error getting default connection")
+                return None, not_version
+
+        else:
+            not_version = False
+            self.last_error = self.tr("Layer not found") + ": 'v_edit_node'"
+            return None, not_version
+
+        return credentials, not_version
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
     
     def connect_to_database(self, host, port, db, user, pwd):
         """ Connect to database with selected parameters """
@@ -186,20 +283,23 @@ class DaoController():
         self.db.setPassword(pwd)
         status = self.db.open() 
         if not status:
-            message = "Database connection error. Please check connection parameters"
+            message = "Database connection error. Please open plugin log file to get more details"
             self.last_error = self.tr(message)
-            return False           
+            details = self.db.lastError().databaseText()
+            self.log_warning(str(details))
+            return False
         
         # Connect to Database 
         self.dao = PgDao()     
         self.dao.set_params(host, port, db, user, pwd)
-        status = self.dao.init_db()                 
+        status = self.dao.init_db()
         if not status:
-            message = "Database connection error. Please check connection parameters"
+            message = "Database connection error. Please open plugin log file to get more details"
             self.last_error = self.tr(message)
-            return False    
+            self.log_warning(str(self.dao.last_error))
+            return False
         
-        return status      
+        return status
     
     
     def get_error_message(self, log_code_id):    
@@ -244,7 +344,7 @@ class DaoController():
     
     def show_message(self, text, message_level=1, duration=5, context_name=None, parameter=None):
         """ Show message to the user with selected message level
-        message_level: {INFO = 0, WARNING = 1, CRITICAL = 2, SUCCESS = 3} """
+        message_level: {INFO = 0(blue), WARNING = 1(yellow), CRITICAL = 2(red), SUCCESS = 3(green)} """
         
         msg = None        
         if text:        
@@ -345,9 +445,11 @@ class DaoController():
         msg_box.setDefaultButton(QMessageBox.No)        
         msg_box.exec_()
                           
+                          
     def get_conn_encoding(self):
         return self.dao.get_conn_encoding()
 
+        
     def get_row(self, sql, log_info=True, log_sql=False, commit=False):
         """ Execute SQL. Check its result in log tables, and show it to the user """
         
@@ -377,10 +479,13 @@ class DaoController():
         self.last_error = self.dao.last_error 
         if not rows:
             # Check if any error has been raised
-            if self.last_error:                  
-                self.show_warning_detail(self.log_codes[-1], str(self.last_error))  
+            if self.last_error:
+                text = "Undefined error"
+                if '-1' in self.log_codes:
+                    text = self.log_codes[-1]
+                self.show_warning_detail(text, str(self.dao.last_error))
             elif self.last_error is None and log_info:
-                self.log_info("Any record found", parameter=sql, stack_level_increase=1)                        		
+                self.log_info("Any record found", parameter=sql, stack_level_increase=1)
 
         return rows  
     
@@ -395,7 +500,10 @@ class DaoController():
         if not result:
             if log_error:
                 self.log_info(sql, stack_level_increase=1)
-            self.show_warning_detail(self.log_codes[-1], str(self.dao.last_error))
+            text = "Undefined error"
+            if '-1' in self.log_codes:
+                text = self.log_codes[-1]
+            self.show_warning_detail(text, str(self.dao.last_error))
             return False
         else:
             if search_audit:
@@ -415,7 +523,10 @@ class DaoController():
         if not value:
             if log_error:
                 self.log_info(sql, stack_level_increase=1)
-            self.show_warning_detail(self.log_codes[-1], str(self.dao.last_error))
+            text = "Undefined error"
+            if '-1' in self.log_codes:
+                text = self.log_codes[-1]
+            self.show_warning_detail(text, str(self.dao.last_error))
             return False
         else:
             if search_audit:
@@ -471,7 +582,10 @@ class DaoController():
         result = self.dao.execute_sql(sql, commit=commit)
         self.last_error = self.dao.last_error         
         if not result:
-            self.show_warning_detail(self.log_codes[-1], str(self.dao.last_error))    
+            text = "Undefined error"
+            if '-1' in self.log_codes:
+                text = self.log_codes[-1]
+            self.show_warning_detail(text, str(self.dao.last_error))
             return False
 
         return True
@@ -520,7 +634,10 @@ class DaoController():
         result = self.dao.execute_sql(sql, commit=commit)
         self.last_error = self.dao.last_error         
         if not result:
-            self.show_warning_detail(self.log_codes[-1], str(self.dao.last_error))    
+            text = "Undefined error"
+            if '-1' in self.log_codes:
+                text = self.log_codes[-1]
+            self.show_warning_detail(text, str(self.dao.last_error))
             return False
 
         return True
@@ -637,10 +754,14 @@ class DaoController():
     def get_layer_by_layername(self, layername, log_info=False):
         """ Get layer with selected @layername (the one specified in the TOC) """
         
+<<<<<<< HEAD
         if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:        
             layer = QgsMapLayerRegistry.instance().mapLayersByName(layername)
         else:
             layer = QgsProject.instance().mapLayersByName(layername)
+=======
+        layer = QgsProject.instance().mapLayersByName(layername)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         if layer:         
             layer = layer[0] 
         elif layer is None and log_info:
@@ -867,12 +988,13 @@ class DaoController():
         """ Get water software from table 'version' """
         
         project_type = None
-        sql = ("SELECT lower(wsoftware)"
-               " FROM " + self.schema_name + ".version ORDER BY id DESC LIMIT 1")
-        row = self.get_row(sql)
-        if row:
-            project_type = row[0]
-            
+        if self.schema_name is not None:
+            sql = ("SELECT lower(wsoftware)"
+                   " FROM " + self.schema_name + ".version ORDER BY id ASC LIMIT 1")
+            row = self.get_row(sql)
+            if row:
+                project_type = row[0]
+
         return project_type
     
       
@@ -948,13 +1070,16 @@ class DaoController():
         return row
     
     
-    def check_role_user(self, role_name):
+    def check_role_user(self, role_name, username=None):
         """ Check if current user belongs to @role_name """
         
         if not self.check_role(role_name):
             return False
-        
-        sql = ("SELECT pg_has_role('" + self.user + "', '" + role_name + "', 'MEMBER');")
+
+        if username is None:
+            username = self.user
+
+        sql = ("SELECT pg_has_role('" + username + "', '" + role_name + "', 'MEMBER');")
         row = self.get_row(sql)
         return row[0]
          
@@ -962,7 +1087,7 @@ class DaoController():
     def get_current_user(self):
         """ Get current user connected to database """
         
-        sql = ("SELECT current_user")
+        sql = "SELECT current_user"
         row = self.get_row(sql)
         cur_user = ""
         if row:
@@ -1087,6 +1212,7 @@ class DaoController():
     def get_log_folder(self):
         """ Return log folder """
         return self.logger.log_folder
+<<<<<<< HEAD
     
     
     def is_layer_visible(self, layer):
@@ -1168,3 +1294,41 @@ class DaoController():
                 ep = self.epa_api_cf.emit_point
                 ep.canvasClicked.disconnect()
             self.epa_api_cf = None
+=======
+
+
+    def is_layer_visible(self, layer):
+        """ Is layer visible """
+
+        visible = False
+        if layer:
+            if Qgis.QGIS_VERSION_INT < 29900:
+                visible = self.iface.legendInterface().isLayerVisible(layer)
+            else:
+                visible = QgsProject.instance().layerTreeRoot().findLayer(layer.id()).itemVisibilityChecked()
+
+        return visible
+
+
+    def set_layer_visible(self, layer, visible=True):
+        """ Set layer visible """
+
+        if layer:
+            if Qgis.QGIS_VERSION_INT < 29900:
+                self.iface.legendInterface().setLayerVisible(layer, visible)
+            else:
+                QgsProject.instance().layerTreeRoot().findLayer(layer.id()).setItemVisibilityChecked(visible)
+
+
+    def get_layers(self):
+        """ Return layers in the same order as listed in TOC """
+
+        if Qgis.QGIS_VERSION_INT < 29900:
+            layers = self.iface.legendInterface().layers()
+        else:
+            layers = [layer.layer() for layer in QgsProject.instance().layerTreeRoot().findLayers()]
+
+        return layers
+
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6

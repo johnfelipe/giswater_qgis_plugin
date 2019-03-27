@@ -16,6 +16,8 @@
  ***************************************************************************/
 
 """
+from builtins import str
+from builtins import next
 
 # -*- coding: utf-8 -*-
 try:
@@ -29,6 +31,10 @@ else:
     from qgis.PyQt.QtCore import QPoint, Qt, QDate
     
 from qgis.core import QgsPoint, QgsFeatureRequest
+<<<<<<< HEAD
+=======
+from qgis.PyQt.QtCore import QPoint, Qt, QDate
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 import utils_giswater
 from functools import partial

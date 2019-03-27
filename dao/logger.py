@@ -1,11 +1,22 @@
+
 # -*- coding: utf-8 -*-
+try:
+    from qgis.core import Qgis
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    pass
+else:
+    from builtins import object
 import logging
 import inspect
 import os
 import time
 
 
-class Logger():
+class Logger(object):
     
     def __init__(self, controller, log_name, log_level, log_suffix, 
                  folder_has_tstamp=False, file_has_tstamp=True, remove_previous=False): 
@@ -43,13 +54,25 @@ class Logger():
         formatter = logging.Formatter(log_format, log_date)
         
         # Create file handler
-        fh = logging.FileHandler(filepath) 
-        fh.setFormatter(formatter)
-        self.logger_file.addHandler(fh)    
+        self.fh = logging.FileHandler(filepath) 
+        self.fh.setFormatter(formatter)
+        self.logger_file.addHandler(self.fh)    
         
         # Initialize number of errors in current process
         self.num_errors = 0
                 
+                
+    def close_logger(self):
+        """ Close logger file """
+        
+        try:
+            self.logger_file.removeHandler(self.fh)
+            self.fh.flush()
+            self.fh.close()    
+            del self.fh        
+        except Exception:
+            pass            
+            
                 
     def log(self, msg=None, log_level=logging.INFO, stack_level=2):
         """ Logger message into logger file with selected level """

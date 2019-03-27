@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """
 This file is part of Giswater 2.0
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -18,6 +19,11 @@ else:
     from qgis.PyQt.QtCore import pyqtSignal
     from qgis.PyQt.QtWidgets import QLabel
 
+=======
+from qgis.PyQt.QtWidgets import QLabel
+from qgis.PyQt.QtCore import pyqtSignal
+ 
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
  
 class ExtendedQLabel(QLabel):
     clicked = pyqtSignal()

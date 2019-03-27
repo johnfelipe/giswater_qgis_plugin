@@ -1,5 +1,5 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU 
 General Public License as published by the Free Software Foundation, either version 3 of the License, 
 or (at your option) any later version.
@@ -39,7 +39,11 @@ class Dimensioning(ParentMapTool):
         layer = self.controller.get_layer_by_tablename("ve_dimensions", show_warning=True)
         if layer:
             self.iface.setActiveLayer(layer)
+<<<<<<< HEAD
             self.controller.set_layer_visible(layer, True)
+=======
+            self.controller.set_layer_visible(layer)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             layer.startEditing()
             # Implement the Add Feature button
             self.iface.actionAddFeature().trigger()

@@ -6,6 +6,7 @@ or (at your option) any later version.
 """
 
 # -*- coding: utf-8 -*-
+<<<<<<< HEAD
 try:
     from qgis.core import Qgis
 except:
@@ -20,6 +21,12 @@ else:
 
 from qgis.core import QgsPoint, QgsMapToPixel
 from qgis.gui import QgsVertexMarker
+=======
+from qgis.core import QgsPoint, QgsMapToPixel
+from qgis.gui import QgsVertexMarker
+from qgis.PyQt.QtCore import QPoint, Qt
+from qgis.PyQt.QtGui import QDoubleValidator
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 import utils_giswater
 from map_tools.parent import ParentMapTool
@@ -146,9 +153,9 @@ class CadAddPoint(ParentMapTool):
 
         # Snapping
         if self.snap_to_selected_layer:
-            (retval, result) = self.snapper.snapToCurrentLayer(event_point, 2)  # @UnusedVariable
+            (retval, result) = self.snapper.snapToCurrentLayer(event_point, 2)
         else:
-            (retval, result) = self.snapper.snapToBackgroundLayers(event_point)  # @UnusedVariable
+            (retval, result) = self.snapper.snapToBackgroundLayers(event_point)
 
         # That's the snapped features
         if result:

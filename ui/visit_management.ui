@@ -23,9 +23,9 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="lbl_filter">
           <property name="text">
-           <string>Filter by Id:</string>
+           <string>Filter by code:</string>
           </property>
          </widget>
         </item>

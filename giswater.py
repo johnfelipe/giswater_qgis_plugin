@@ -1,11 +1,14 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU 
 General Public License as published by the Free Software Foundation, either version 3 of the License, 
 or (at your option) any later version.
 """
+from __future__ import absolute_import
+from builtins import range
 
 # -*- coding: utf-8 -*-
+<<<<<<< HEAD
 
 
 from PyQt4.QtGui import QKeySequence
@@ -26,12 +29,25 @@ else:
     from qgis.core import QgsProject
     
 from qgis.core import QgsExpressionContextUtils, QgsProject
+=======
+try:
+    from qgis.core import Qgis
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+from qgis.core import QgsExpressionContextUtils, QgsProject
+from qgis.PyQt.QtCore import QObject, QSettings, Qt
+from qgis.PyQt.QtWidgets import QAction, QActionGroup, QMenu, QApplication, QAbstractItemView, QToolButton, QDockWidget
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtSql import QSqlQueryModel
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 import os.path
 import sys
 from collections import OrderedDict
 from functools import partial
 
+<<<<<<< HEAD
 from actions.go2epa import Go2Epa
 from actions.basic import Basic
 from actions.edit import Edit
@@ -55,6 +71,32 @@ from map_tools.replace_node import ReplaceNodeMapTool
 from models.plugin_toolbar import PluginToolbar
 from models.sys_feature_cat import SysFeatureCat
 from ui_manager import AuditCheckProjectResult
+=======
+from .actions.basic import Basic
+from .actions.edit import Edit
+from .actions.go2epa import Go2Epa
+from .actions.master import Master
+from .actions.mincut import MincutParent
+from .actions.om import Om
+from .actions.update_sql import UpdateSQL
+from .actions.utils import Utils
+from .dao.controller import DaoController
+from .map_tools.cad_add_circle import CadAddCircle
+from .map_tools.cad_add_point import CadAddPoint
+from .map_tools.change_elem_type import ChangeElemType
+from .map_tools.connec import ConnecMapTool
+from .map_tools.delete_node import DeleteNodeMapTool
+from .map_tools.dimensioning import Dimensioning
+from .map_tools.draw_profiles import DrawProfiles
+from .map_tools.flow_trace_flow_exit import FlowTraceFlowExitMapTool
+from .map_tools.move_node import MoveNodeMapTool
+from .map_tools.replace_node import ReplaceNodeMapTool
+from .map_tools.open_visit import OpenVisit
+from .models.plugin_toolbar import PluginToolbar
+from .models.sys_feature_cat import SysFeatureCat
+from .search.search_plus import SearchPlus
+from .ui_manager import AuditCheckProjectResult
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 
 class Giswater(QObject):  
@@ -82,7 +124,11 @@ class Giswater(QObject):
 
         # Initialize svg giswater directory
         svg_plugin_dir = os.path.join(self.plugin_dir, 'svg')
+<<<<<<< HEAD
         if Qgis.QGIS_VERSION_INT >= 21400 and Qgis.QGIS_VERSION_INT < 29900:
+=======
+        if Qgis.QGIS_VERSION_INT < 29900:
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             QgsExpressionContextUtils.setProjectVariable('svg_path', svg_plugin_dir)
         else:
             QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), 'svg_path', svg_plugin_dir)
@@ -96,15 +142,24 @@ class Giswater(QObject):
           
         # Set plugin settings
         self.settings = QSettings(setting_file, QSettings.IniFormat)
-        self.settings.setIniCodec(sys.getfilesystemencoding())  
-        
-        # Set QGIS settings. Stored in the registry (on Windows) or .ini file (on Unix) 
+        self.settings.setIniCodec(sys.getfilesystemencoding())
+
+        # Show Python console and Log Messages panel if parameter 'devoloper_mode' = True
+        self.show_python_console()
+
+        # Set QGIS settings. Stored in the registry (on Windows) or .ini file (on Unix)
         self.qgis_settings = QSettings()
-        self.qgis_settings.setIniCodec(sys.getfilesystemencoding()) 
-        
+        self.qgis_settings.setIniCodec(sys.getfilesystemencoding())
+
         # Define signals
         self.set_signals()
+
+        if sys.version[0] == '2':
+            reload(sys)
+            sys.setdefaultencoding("utf-8")
+
         
+<<<<<<< HEAD
         # Set default encoding 
         try:
             if Qgis.QGIS_VERSION_INT >= 21400 and Qgis.QGIS_VERSION_INT < 29900:
@@ -117,14 +172,56 @@ class Giswater(QObject):
             pass
        
                
+=======
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
     def set_signals(self): 
         """ Define widget and event signals """
         self.iface.projectRead.connect(self.project_read)                
 
-  
+
+    def set_info_button(self, connection_status):
+
+        self.toolButton = QToolButton()
+        self.action_info = self.iface.addToolBarWidget(self.toolButton)
+
+        icon_path = self.icon_folder + '36.png'
+        if os.path.exists(icon_path):
+            icon = QIcon(icon_path)
+            action = QAction(icon, "Show info", self.iface.mainWindow())
+        else:
+            action = QAction("Show info", self.iface.mainWindow())
+
+        self.toolButton.setDefaultAction(action)
+
+        self.update_sql = UpdateSQL(self.iface, self.settings, self.controller, self.plugin_dir)
+        action.triggered.connect(partial(self.update_sql.init_sql, connection_status))
+
+    
+    def show_python_console(self):
+        """ Show Python console and Log Messages panel if parameter 'devoloper_mode' = True """
+        
+        # Get parameter 'devoloper_mode'
+        devoloper_mode = self.settings.value('system_variables/devoloper_mode').upper()
+        if devoloper_mode != 'TRUE':
+            return
+            
+        # Manage Python console
+        python_console = self.iface.mainWindow().findChild(QDockWidget, 'PythonConsole')
+        if python_console:
+            python_console.setVisible(True)
+        else:
+            import console
+            console.show_console()
+            
+        # Manage Log Messages panel
+        message_log = self.iface.mainWindow().findChild(QDockWidget, 'MessageLog')
+        if message_log:
+            message_log.setVisible(True)
+        
+
     def tr(self, message):
         if self.controller:
-            return self.controller.tr(message)      
+            return self.controller.tr(message)
         
     
     def manage_action(self, index_action, function_name):  
@@ -146,6 +243,7 @@ class Giswater(QObject):
                 callback_function = getattr(self.mincut, function_name)
                 action.triggered.connect(callback_function)            
             # OM toolbar actions
+<<<<<<< HEAD
             elif int(index_action) in (198, 64, 65, 81, 82, 84):
                 callback_function = getattr(self.om, function_name)
                 action.triggered.connect(callback_function)
@@ -155,6 +253,17 @@ class Giswater(QObject):
                 action.triggered.connect(callback_function)
             # Go2epa toolbar actions
             elif int(index_action) in (23, 25, 29, 196, 199):
+=======
+            elif int(index_action) in (64, 65, 74, 75, 81, 82, 84):
+                callback_function = getattr(self.om, function_name)
+                action.triggered.connect(callback_function)
+            # Edit toolbar actions
+            elif int(index_action) in (0o1, 0o2, 33, 34, 66, 67, 68):
+                callback_function = getattr(self.edit, function_name)
+                action.triggered.connect(callback_function)
+            # Go2epa toolbar actions
+            elif int(index_action) in (23, 25, 29, 196):
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                 callback_function = getattr(self.go2epa, function_name)
                 action.triggered.connect(callback_function)
             # Master toolbar actions
@@ -162,14 +271,17 @@ class Giswater(QObject):
                 callback_function = getattr(self.master, function_name)
                 action.triggered.connect(callback_function)
             # Utils toolbar actions
-            elif int(index_action) in (19, 83, 99):
+            elif int(index_action) in (206, 19, 83, 99):
                 callback_function = getattr(self.utils, function_name)
                 action.triggered.connect(callback_function)                
+<<<<<<< HEAD
             # Info toolbar actions
             elif int(index_action) == 36:
                 callback_function = getattr(self.info, function_name)
                 action.triggered.connect(callback_function)
 
+=======
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             # Generic function
             else:        
                 callback_function = getattr(self, 'action_triggered')  
@@ -190,8 +302,15 @@ class Giswater(QObject):
         if icon is None:
             action = QAction(text, action_group) 
         else:
+<<<<<<< HEAD
             action = QAction(icon, text, action_group)  
         action.setObjectName(function_name)
+=======
+            action = QAction(icon, text, action_group)
+        action.setObjectName(function_name)
+        action.setProperty('index_action', index_action)
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         # Button add_node or add_arc: add drop down menu to button in toolbar
         if self.schema_exists and (index_action == '01' or index_action == '02'):
             action = self.manage_dropdown_menu(action, index_action)
@@ -216,24 +335,36 @@ class Giswater(QObject):
         menu = QMenu()
 
         # List of nodes from node_type_cat_type - nodes which we are using
+<<<<<<< HEAD
         list_feature_cat = self.controller.get_values_from_dictionary(self.feature_cat)
         for feature_cat in list_feature_cat:
+=======
+        for feature_cat in list(self.feature_cat.values()):
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             if (index_action == '01' and feature_cat.type == 'NODE') or (index_action == '02' and feature_cat.type == 'ARC'):
                 obj_action = QAction(str(feature_cat.id), self)
                 obj_action.setShortcut(QKeySequence(str(feature_cat.shortcut_key)))
                 menu.addAction(obj_action)
                 obj_action.triggered.connect(partial(self.edit.edit_add_feature, feature_cat))
         menu.addSeparator()
+<<<<<<< HEAD
         list_feature_cat = self.controller.get_values_from_dictionary(self.feature_cat)
         for feature_cat in list_feature_cat:
+=======
+        for feature_cat in list(self.feature_cat.values()):
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             if (index_action == '01' and feature_cat.type == 'CONNEC'):
                 obj_action = QAction(str(feature_cat.id), self)
                 obj_action.setShortcut(QKeySequence(str(feature_cat.shortcut_key)))
                 menu.addAction(obj_action)
                 obj_action.triggered.connect(partial(self.edit.edit_add_feature, feature_cat))
         menu.addSeparator()
+<<<<<<< HEAD
         list_feature_cat = self.controller.get_values_from_dictionary(self.feature_cat)
         for feature_cat in list_feature_cat:
+=======
+        for feature_cat in list(self.feature_cat.values()):
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             if (index_action == '01' and feature_cat.type == 'GULLY' and self.wsoftware == 'ud'):
                 obj_action = QAction(str(feature_cat.id), self)
                 obj_action.setShortcut(QKeySequence(str(feature_cat.shortcut_key)))
@@ -259,8 +390,14 @@ class Giswater(QObject):
             return None
             
         # Buttons NOT checkable (normally because they open a form)
+<<<<<<< HEAD
         if int(index_action) in (19, 23, 25, 26, 27, 29, 32, 33, 34, 36, 38, 41, 45, 46, 47, 48, 49,
                                  50, 86, 61, 64, 65, 66, 67, 68, 81, 82, 83, 84, 99, 196, 198):
+=======
+        if int(index_action) in (19, 23, 25, 26, 27, 29, 33, 34, 38, 41, 45, 46, 47, 48, 49,
+                                 50, 86, 64, 65, 66, 67, 68, 74, 75, 81, 82, 83, 84, 98, 99, 196, 206):
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             action = self.create_action(index_action, text_action, toolbar, False, function_name, action_group)
         # Buttons checkable (normally related with 'map_tools')                
         else:
@@ -311,8 +448,10 @@ class Giswater(QObject):
     def manage_toolbars(self):
         """ Manage actions of the different plugin toolbars """           
                         
+        list_actions = None        
         toolbar_id = "basic"
         if self.controller.get_project_type() == 'ws':
+<<<<<<< HEAD
             list_actions = ['37', '41', '48', '86', '32']
         if self.controller.get_project_type() == 'ud':
             list_actions = ['37', '41', '48', '32']
@@ -324,6 +463,19 @@ class Giswater(QObject):
             
         toolbar_id = "om_ud"
         list_actions = ['43', '56', '57', '61', '64', '65', '84']
+=======
+            list_actions = ['41', '48', '86', '32']
+        elif self.controller.get_project_type() == 'ud':
+            list_actions = ['41', '48', '32']
+        self.manage_toolbar(toolbar_id, list_actions)
+
+        toolbar_id = "om_ws"
+        list_actions = ['26', '27', '74', '75', '61', '64', '65', '84']
+        self.manage_toolbar(toolbar_id, list_actions) 
+            
+        toolbar_id = "om_ud"
+        list_actions = ['43', '56', '57', '74', '75', '61', '64', '65', '84']
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         self.manage_toolbar(toolbar_id, list_actions)                           
         
         toolbar_id = "edit"
@@ -335,7 +487,11 @@ class Giswater(QObject):
         self.manage_toolbar(toolbar_id, list_actions)   
         
         toolbar_id = "epa"
+<<<<<<< HEAD
         list_actions = ['199', '196', '23', '25', '29']
+=======
+        list_actions = ['196', '23', '25', '29']
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         self.manage_toolbar(toolbar_id, list_actions)    
         
         toolbar_id = "master"
@@ -343,9 +499,10 @@ class Giswater(QObject):
         self.manage_toolbar(toolbar_id, list_actions)  
             
         toolbar_id = "utils"
-        list_actions = ['19', '99', '83']               
+        list_actions = ['206', '19', '99', '83']
         self.manage_toolbar(toolbar_id, list_actions)                                      
             
+<<<<<<< HEAD
         toolbar_id = "info"
         list_actions = ['36']
         self.manage_toolbar(toolbar_id, list_actions)                                      
@@ -353,6 +510,12 @@ class Giswater(QObject):
         # Manage action group of every toolbar
         parent = self.iface.mainWindow()           
         for plugin_toolbar in self.controller.get_values_from_dictionary(self.plugin_toolbars):
+=======
+
+        # Manage action group of every toolbar
+        parent = self.iface.mainWindow()           
+        for plugin_toolbar in list(self.plugin_toolbars.values()):
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             ag = QActionGroup(parent)
             for index_action in plugin_toolbar.list_actions:
                 self.add_action(index_action, plugin_toolbar.toolbar, ag)                                                                            
@@ -368,23 +531,23 @@ class Giswater(QObject):
             self.mincut.set_controller(self.controller)
         self.om.set_controller(self.controller)  
         self.utils.set_controller(self.controller)                   
-        self.info.set_controller(self.controller)                   
         self.basic.set_project_type(self.wsoftware)
         self.go2epa.set_project_type(self.wsoftware)
         self.edit.set_project_type(self.wsoftware)
         self.master.set_project_type(self.wsoftware)
         self.om.set_project_type(self.wsoftware)
         self.utils.set_project_type(self.wsoftware)
-        self.info.set_project_type(self.wsoftware)
-            
+
         # Enable toobar 'basic' and 'info'
         self.enable_toolbar("basic")           
-        self.enable_toolbar("info")           
-           
+
            
     def manage_toolbar(self, toolbar_id, list_actions): 
         """ Manage action of selected plugin toolbar """
                 
+        if list_actions is None:
+            return
+            
         toolbar_name = self.tr('toolbar_' + toolbar_id + '_name')        
         plugin_toolbar = PluginToolbar(toolbar_id, toolbar_name, True)
         plugin_toolbar.toolbar = self.iface.addToolBar(toolbar_name)
@@ -397,12 +560,20 @@ class Giswater(QObject):
         """ Create the menu entries and toolbar icons inside the QGIS GUI """ 
         
         # Get tables or views specified in 'db' config section         
+<<<<<<< HEAD
         self.table_arc = self.settings.value('db/table_arc', 've_arc')
         self.table_node = self.settings.value('db/table_node', 've_node')
         self.table_connec = self.settings.value('db/table_connec', 've_connec')
         self.table_gully = self.settings.value('db/table_gully', 've_gully')
         # self.table_pgully = self.settings.value('db/table_pgully', 'v_edit_gully_pol')
         self.table_version = self.settings.value('db/table_version', 'version') 
+=======
+        self.table_arc = self.settings.value('db/table_arc', 'v_edit_arc')        
+        self.table_node = self.settings.value('db/table_node', 'v_edit_node')   
+        self.table_connec = self.settings.value('db/table_connec', 'v_edit_connec')  
+        self.table_gully = self.settings.value('db/table_gully', 'v_edit_gully') 
+        self.table_pgully = self.settings.value('db/table_pgully', 'v_edit_gully_pol')
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
         # self.table_man_connec = self.settings.value('db/table_man_connec', 'v_edit_man_connec')
         # self.table_man_gully = self.settings.value('db/table_man_gully', 'v_edit_man_gully')
@@ -457,7 +628,7 @@ class Giswater(QObject):
         for cur_layer in layers:
             uri_table = self.controller.get_layer_source_table_name(cur_layer)  # @UnusedVariable
             if uri_table:
-                if uri_table in self.feature_cat.keys():
+                if uri_table in list(self.feature_cat.keys()):
                     elem = self.feature_cat[uri_table]
                     elem.layername = cur_layer.name()
 
@@ -466,18 +637,30 @@ class Giswater(QObject):
         """ Removes the plugin menu item and icon from QGIS GUI """
         
         try:
+<<<<<<< HEAD
             for action in self.controller.get_values_from_dictionary(self.actions):
                 self.iface.removePluginMenu(self.plugin_name, action)
                 self.iface.removeToolBarIcon(action)
                 
             for plugin_toolbar in self.controller.get_values_from_dictionary(self.plugin_toolbars):
+=======
+
+            # Remove icon of action 'Info'
+            self.iface.removeToolBarIcon(self.action_info)
+
+            for action in list(self.actions.values()):
+                self.iface.removePluginMenu(self.plugin_name, action)
+                self.iface.removeToolBarIcon(action)
+                
+            for plugin_toolbar in list(self.plugin_toolbars.values()):
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                 if plugin_toolbar.enabled:
                     plugin_toolbar.toolbar.setVisible(False)                
                     del plugin_toolbar.toolbar
 
 
             # unload all loaded giswater related modules
-            for modName, mod in sys.modules.items():
+            for modName, mod in list(sys.modules.items()):
                 if mod and hasattr(mod, '__file__') and self.plugin_dir in mod.__file__:
                     del sys.modules[modName]
 
@@ -511,13 +694,17 @@ class Giswater(QObject):
         self.enable_actions(visible)
         
         try:
+<<<<<<< HEAD
             list_plugin_toolbar = self.controller.get_values_from_dictionary(self.plugin_toolbars)
             for plugin_toolbar in list_plugin_toolbar:
+=======
+            for plugin_toolbar in list(self.plugin_toolbars.values()):
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                 if plugin_toolbar.enabled:                
                     plugin_toolbar.toolbar.setVisible(visible)
         except AttributeError:
             pass
-        except KeyError:
+        except:
             pass                      
                                   
         
@@ -533,34 +720,35 @@ class Giswater(QObject):
     def project_read(self, show_warning=True): 
         """ Function executed when a user opens a QGIS project (*.qgs) """
         
-        # Set controller to handle settings and database connection
         self.controller = DaoController(self.settings, self.plugin_name, self.iface, create_logger=show_warning)
-        self.controller.set_plugin_dir(self.plugin_dir)        
+        self.controller.set_plugin_dir(self.plugin_dir)
         self.controller.set_qgis_settings(self.qgis_settings)
         self.controller.set_giswater(self)
-        connection_status = self.controller.set_database_connection()
-        if not connection_status:
-            message = self.controller.last_error  
+        connection_status, not_version = self.controller.set_database_connection()
+        self.set_info_button(connection_status)
+        if not connection_status or not_version:
+            message = self.controller.last_error
             if show_warning:
-                self.controller.show_warning(message, 15) 
-            return 
-        
+                self.controller.show_warning(message, 15)
+                self.controller.log_warning(str(self.controller.layer_source))
+            return
+
         # Cache error message with log_code = -1 (uncatched error)
-        self.controller.get_error_message(-1)       
-                
+        self.controller.get_error_message(-1)
+
         # Manage locale and corresponding 'i18n' file
         self.controller.manage_translation(self.plugin_name)
-                
-        # Get schema name from table 'version' and set it in controller and in config file
-        layer_version = self.controller.get_layer_by_tablename("version")
-        layer_source = self.controller.get_layer_source(layer_version)  
+
+        # Get schema name from table 'v_edit_node' and set it in controller and in config file
+        layer_version = self.controller.get_layer_by_tablename("v_edit_node")
+        layer_source = self.controller.get_layer_source(layer_version)
         self.schema_name = layer_source['schema']
-        self.controller.plugin_settings_set_value("schema_name", self.schema_name)   
-        self.controller.set_schema_name(self.schema_name) 
-          
+        self.controller.plugin_settings_set_value("schema_name", self.schema_name)
+        self.controller.set_schema_name(self.schema_name)
+
         # Check if schema exists
         self.schema_exists = self.controller.dao.check_schema(self.schema_name)
-        if not self.schema_exists and show_warning:
+        if not self.schema_exists:
             self.controller.show_warning("Selected schema not found", parameter=self.schema_name)
 
         # Get water software from table 'version'
@@ -575,13 +763,12 @@ class Giswater(QObject):
         self.master = Master(self.iface, self.settings, self.controller, self.plugin_dir)
         if self.wsoftware == 'ws':
             self.mincut = MincutParent(self.iface, self.settings, self.controller, self.plugin_dir)
-        self.utils = Utils(self.iface, self.settings, self.controller, self.plugin_dir)    
-        self.info = Info(self.iface, self.settings, self.controller, self.plugin_dir)    
+        self.utils = Utils(self.iface, self.settings, self.controller, self.plugin_dir)
 
         # Manage layers
         if not self.manage_layers():
             return
-              
+
         # Manage layer names of the tables present in table 'sys_feature_cat'
         self.manage_layer_names()   
         
@@ -614,8 +801,11 @@ class Giswater(QObject):
         self.controller.check_user_roles()
         
         # Manage project variable 'expl_id'
-        self.manage_expl_id()           
-        
+        self.manage_expl_id()
+
+        # Hide actions according parameter action_to_hide from config file
+        self.hide_actions()
+
         # Log it
         message = "Project read successfully"
         self.controller.log_info(message)
@@ -759,31 +949,51 @@ class Giswater(QObject):
                 #     self.layer_man_gully = cur_layer
                 #     self.layer_gully_man_ud.append(cur_layer)
                     
+<<<<<<< HEAD
                 # if self.table_man_pgully == uri_table:
                 #     self.layer_man_pgully = cur_layer
                 #
                 if self.table_version == uri_table:
                     self.layer_version = cur_layer
+=======
+                if self.table_man_pgully == uri_table:
+                    self.layer_man_pgully = cur_layer
+                
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
         # Set arrow cursor
         QApplication.setOverrideCursor(Qt.ArrowCursor)       
         layers = self.controller.get_layers()
+<<<<<<< HEAD
         # TODO descomentar y revisar esto
         #  status = self.populate_audit_check_project(layers)
         # if not status:
         #     return False
         QApplication.restoreOverrideCursor()
+=======
+        status = self.populate_audit_check_project(layers)
+        QApplication.restoreOverrideCursor()      
+        if not status:
+            return False
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         return True
 
 
     def manage_snapping_layers(self):
+<<<<<<< HEAD
         ''' Manage snapping of layers '''
         
+=======
+        """ Manage snapping of layers """
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         # TODO 3.x
         try:
             layer = self.controller.get_layer_by_tablename('v_edit_man_pipe')
             if layer:
                 QgsProject.instance().setSnapSettingsForLayer(layer.id(), True, 2, 1, 15.0, False)
+<<<<<<< HEAD
             layer = self.controller.get_layer_by_tablename('ve_arc')
             if layer:
                 QgsProject.instance().setSnapSettingsForLayer(layer.id(), True, 2, 1, 15.0, False)
@@ -802,6 +1012,26 @@ class Giswater(QObject):
         except:
             pass  
             
+=======
+            layer = self.controller.get_layer_by_tablename('v_edit_arc')
+            if layer:
+                QgsProject.instance().setSnapSettingsForLayer(layer.id(), True, 2, 1, 15.0, False)
+            layer = self.controller.get_layer_by_tablename('v_edit_connec')
+            if layer:
+                QgsProject.instance().setSnapSettingsForLayer(layer.id(), True, 0, 1, 15.0, False)
+            layer = self.controller.get_layer_by_tablename('v_edit_node')
+            if layer:
+                QgsProject.instance().setSnapSettingsForLayer(layer.id(), True, 0, 1, 15.0, False)
+            layer = self.controller.get_layer_by_tablename('v_edit_gully')
+            if layer:
+                QgsProject.instance().setSnapSettingsForLayer(layer.id(), True, 0, 1, 15.0, False)
+            layer = self.controller.get_layer_by_tablename('v_edit_man_conduit')
+            if layer:
+                QgsProject.instance().setSnapSettingsForLayer(layer.id(), True, 2, 1, 15.0, False)
+        except:
+            pass
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                     
     def manage_custom_forms(self):
         """ Set layer custom UI form and init function """
@@ -899,6 +1129,7 @@ class Giswater(QObject):
         elif self.wsoftware == 'ud':
             fieldname_node = "ymax"
             fieldname_connec = "connec_depth"
+<<<<<<< HEAD
             
         if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:            
             layer_node = self.controller.get_layer_by_tablename("ve_node")
@@ -907,6 +1138,16 @@ class Giswater(QObject):
                 layer_node.setDisplayField(display_field)
             
             layer_connec = self.controller.get_layer_by_tablename("ve_connec")
+=======
+
+        if Qgis.QGIS_VERSION_INT < 29900:
+            layer_node = self.controller.get_layer_by_tablename("v_edit_node")
+            if layer_node:
+                display_field = 'depth : [% "' + fieldname_node + '" %]'
+                layer_node.setDisplayField(display_field)
+
+            layer_connec = self.controller.get_layer_by_tablename("v_edit_connec")
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             if layer_connec:
                 display_field = 'depth : [% "' + fieldname_connec + '" %]'
                 layer_connec.setDisplayField(display_field)
@@ -930,8 +1171,13 @@ class Giswater(QObject):
         self.set_map_tool('cad_add_circle')        
         self.set_map_tool('cad_add_point')
         self.set_map_tool('map_tool_open_visit')
+<<<<<<< HEAD
                 
         
+=======
+
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
     def set_map_tool(self, map_tool_name):
         """ Set objects for map tools classes """  
 
@@ -944,6 +1190,24 @@ class Giswater(QObject):
                 map_tool.set_layers(self.layer_arc_man_ud, self.layer_connec_man_ud, self.layer_node_man_ud, self.layer_gully_man_ud)
                 map_tool.set_controller(self.controller)
 
+<<<<<<< HEAD
+=======
+       
+    def set_search_plus(self):
+        """ Set SearchPlus object """
+
+        try:         
+            self.search_plus = SearchPlus(self.iface, self.srid, self.controller, self.settings, self.plugin_dir)
+            self.basic.search_plus = self.search_plus
+            status = self.search_plus.init_config()
+            self.actions['32'].setVisible(status) 
+            self.actions['32'].setEnabled(status) 
+            self.actions['32'].setCheckable(False)
+            self.search_plus.feature_cat = self.feature_cat
+        except Exception as e:
+            self.controller.show_warning("Error setting searchplus button: " + str(e))     
+               
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         
     def manage_actions_linux(self):
         """ Disable for Linux 'go2epa' actions """
@@ -984,14 +1248,22 @@ class Giswater(QObject):
         
         # Get project variable 'expl_id'
         try:
+<<<<<<< HEAD
             if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:
+=======
+            if Qgis.QGIS_VERSION_INT < 29900:
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                 expl_id = QgsExpressionContextUtils.projectScope().variable('expl_id')
             # TODO: 3.x
             else:
                 expl_id = None
         except:
             pass
+<<<<<<< HEAD
             
+=======
+        
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         if expl_id is None:
             return
                     
@@ -1056,23 +1328,25 @@ class Giswater(QObject):
             return False
 
         elif row[0] > 0:
-            message = "Some layers of your role not found. Do you want to view them?"
-            answer = self.controller.ask_question(message, "Warning")
-            if answer:
-                sql = ("SELECT * FROM " + self.schema_name + ".audit_check_project"
-                       " WHERE fprocesscat_id = 1 AND enabled = false AND user_name = current_user")
-                rows = self.controller.get_rows(sql, log_sql=True)
-                if rows:
-                    self.populate_table_by_query(self.dlg_audit_project.tbl_result, sql)
-                    self.dlg_audit_project.tbl_result.horizontalHeader().setResizeMode(0)
-                    self.dlg_audit_project.exec_()
-                    # Fill log file with the names of the layers
-                    message = "Layers of your role not found"
-                    self.controller.log_info(message)
-                    message = ""
-                    for row in rows:
-                        message += str(row["table_id"]) + "\n"
-                    self.controller.log_info(message)
+            show_msg = self.settings.value('system_variables/show_msg_layer')
+            if show_msg == 'TRUE':
+                message = "Some layers of your role not found. Do you want to view them?"
+                answer = self.controller.ask_question(message, "Warning")
+                if answer:
+                    sql = ("SELECT * FROM " + self.schema_name + ".audit_check_project"
+                           " WHERE fprocesscat_id = 1 AND enabled = false AND user_name = current_user")
+                    rows = self.controller.get_rows(sql, log_sql=True)
+                    if rows:
+                        self.populate_table_by_query(self.dlg_audit_project.tbl_result, sql)
+                        self.dlg_audit_project.tbl_result.horizontalHeader().setResizeMode(0)
+                        self.dlg_audit_project.exec_()
+                        # Fill log file with the names of the layers
+                        message = "Layers of your role not found"
+                        self.controller.log_info(message)
+                        message = ""
+                        for row in rows:
+                            message += str(row["table_id"]) + "\n"
+                        self.controller.log_info(message)
             
         return True
 
@@ -1091,5 +1365,18 @@ class Giswater(QObject):
         # Check for errors
         if model.lastError().isValid():
             self.controller.show_warning(model.lastError().text())
-            
-            
+
+
+    def hide_actions(self):
+        """ This function was created added in order to hide actions """
+
+        # Configure list_to_hide into file giswater.config -> [system_variables]-> action_to_hide in format n,n,n
+        # Example action_to_hide=19,74,75
+        list_to_hide = self.settings.value('system_variables/action_to_hide')
+        if len(list_to_hide) > 0:
+            action_list = self.iface.mainWindow().findChildren(QAction)
+            for action in action_list:
+                _property = action.property('index_action')
+                if _property is not None:
+                    if str(action.property('index_action')) in list_to_hide:
+                        action.setVisible(False)

@@ -73,7 +73,15 @@
     <message>
         <source>65_text</source>
         <translation>Gestor de visitas</translation>
-    </message>		
+    </message>
+    <message>
+        <source>74_text</source>
+        <translation>Añadir nuevo lote</translation>
+    </message>
+    <message>
+        <source>75_text</source>
+        <translation>Gestor de lotes</translation>
+    </message>
     <message>
         <source>01_text</source>
         <translation>Insertar nodo, connect (WS) / Insertar nodo, connect, gully (UD)</translation>
@@ -108,7 +116,7 @@
     </message> 
     <message>
         <source>61_text</source>
-        <translation>Gestor del catalogo de trabajo</translation>
+        <translation>Informacion de la visita</translation>
     </message>
     <message>
         <source>66_text</source>

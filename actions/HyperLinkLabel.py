@@ -6,6 +6,7 @@ or (at your option) any later version.
 """
 
 # -*- coding: utf-8 -*-
+<<<<<<< HEAD
 try:
     from qgis.core import Qgis
 except:
@@ -17,6 +18,10 @@ if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:
 else:
     from qgis.PyQt.QtCore import pyqtSignal
     from qgis.PyQt.QtWidgets import QLabel
+=======
+from qgis.PyQt.QtWidgets import QLabel
+from qgis.PyQt.QtCore import pyqtSignal
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 
 class HyperLinkLabel(QLabel):

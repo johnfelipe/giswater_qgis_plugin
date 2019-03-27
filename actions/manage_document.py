@@ -1,11 +1,12 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.
 """
 
 # -*- coding: utf-8 -*-    
+<<<<<<< HEAD
 try:
     from qgis.core import Qgis
 except:
@@ -15,6 +16,9 @@ if Qgis.QGIS_VERSION_INT >= 20000 and Qgis.QGIS_VERSION_INT < 29900:
     from PyQt4.QtGui import QAbstractItemView, QTableView
 else:
     from qgis.PyQt.QtWidgets import QAbstractItemView, QTableView
+=======
+from qgis.PyQt.QtWidgets import QAbstractItemView, QTableView
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 from functools import partial
 
@@ -40,7 +44,7 @@ class ManageDocument(ParentManage):
         self.manage_document()
                 
 
-    def manage_document(self, tablename=None, qtable=None, item_id=None, feature=None):
+    def manage_document(self, tablename=None, qtable=None, item_id=None, feature=None, geom_type=None):
         """ Button 34: Add document """
         self.controller.restore_info()
         # Create the dialog and signals
@@ -91,9 +95,14 @@ class ManageDocument(ParentManage):
         self.set_completer_object(self.dlg_add_doc, table_object)
         geom_type = 'arc'
         # Adding auto-completion to a QLineEdit for default feature
+<<<<<<< HEAD
         viewname = "ve_" + geom_type
+=======
+        if geom_type is None:
+            geom_type = "arc"
+        viewname = "v_edit_" + geom_type
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         self.set_completer_feature_id(self.dlg_add_doc.feature_id, geom_type, viewname)
-
         # Set signals
         self.dlg_add_doc.path_url.clicked.connect(partial(self.open_web_browser, self.dlg_add_doc, "path"))
         self.dlg_add_doc.path_doc.clicked.connect(partial(self.get_file_dialog, self.dlg_add_doc, "path"))

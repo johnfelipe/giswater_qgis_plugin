@@ -1,9 +1,21 @@
+from __future__ import print_function
+
 # -*- coding: utf-8 -*-
+try:
+    from qgis.core import Qgis
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    pass
+else:
+    from builtins import object
+
 import psycopg2         #@UnusedImport
 import psycopg2.extras
 
 
-class PgDao():
+class PgDao(object):
 
     def __init__(self):
         self.last_error = None
@@ -17,12 +29,37 @@ class PgDao():
             self.cursor = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             status = True
         except psycopg2.DatabaseError as e:
+<<<<<<< HEAD
+=======
+            # fix_print_with_import
+            print('{pg_dao} Error %s' % e)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             self.last_error = e            
             status = False
         return status
 
+    
+    def close_db(self):
+        """ Close database connection """
+        
+        try:
+            status = True
+            if self.cursor:
+                self.cursor.close()
+            if self.conn:
+                self.conn.close()
+            del self.cursor
+            del self.conn
+        except Exception as e:
+            self.last_error = e            
+            status = False
+            
+        return status
+        
+
     def get_conn_encoding(self):
         return self.conn.encoding
+
 
     def set_params(self, host, port, dbname, user, password):
         """ Set database parameters """
@@ -33,7 +70,9 @@ class PgDao():
         self.user = user
         self.password = password
         self.conn_string = "host="+self.host+" port="+self.port
-        self.conn_string+= " dbname="+self.dbname+" user="+self.user+" password="+self.password
+        self.conn_string += " dbname="+self.dbname+" user="+self.user
+        if self.password is not None:
+            self.conn_string += " password="+self.password
         
         
     def get_rows(self, sql, commit=False):
@@ -79,6 +118,10 @@ class PgDao():
         try:
             name = self.cursor.description[index][0]
         except Exception as e:
+<<<<<<< HEAD
+=======
+            # fix_print_with_import
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             print("get_column_name: {0}".format(e))        
         finally:
             return name
@@ -91,6 +134,10 @@ class PgDao():
         try:
             total = len(self.cursor.description)
         except Exception as e:
+<<<<<<< HEAD
+=======
+            # fix_print_with_import
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             print("get_columns_length: {0}".format(e))        
         finally:
             return total

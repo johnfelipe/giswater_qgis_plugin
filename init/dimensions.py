@@ -1,10 +1,13 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU 
 General Public License as published by the Free Software Foundation, either version 3 of the License, 
 or (at your option) any later version.
 """
+from builtins import str
+from builtins import next
 # -*- coding: utf-8 -*-
+<<<<<<< HEAD
 from map_tools.snapping_utils import SnappingConfigManager
 
 try:
@@ -20,6 +23,16 @@ else:
     from qgis.PyQt.QtGui import QColor
     from qgis.PyQt.QtWidgets import QPushButton, QLineEdit
 
+=======
+try:
+    from qgis.core import Qgis
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+from qgis.PyQt.QtWidgets import QPushButton, QLineEdit
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtCore import QObject, QTimer, QPoint
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 from qgis.core import QgsFeatureRequest, QgsPoint
 from qgis.gui import QgsMapToolEmitPoint, QgsMapTip, QgsVertexMarker
 
@@ -59,9 +72,13 @@ class Dimensions(ParentDialog):
         self.canvas = self.iface.mapCanvas()
         self.emit_point = QgsMapToolEmitPoint(self.canvas)
         self.canvas.setMapTool(self.emit_point)
+<<<<<<< HEAD
         # Snapper
         self.snapper_manager = SnappingConfigManager(self.iface, self.controller)
         self.snapper = self.snapper_manager.get_snapper()
+=======
+        self.snapper = self.get_snapper()
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
         # Vertex marker
         self.vertex_marker = QgsVertexMarker(self.canvas)
@@ -88,7 +105,7 @@ class Dimensions(ParentDialog):
     def orientation(self):
         
         # Disconnect previous snapping
-        QObject.disconnect(self.emit_point, SIGNAL("canvasClicked(const QgsPoint &, Qt::MouseButton)"), self.click_button_snapping)
+        self.emit_point.canvasClicked.disconnect(self.click_button_snapping)
         self.emit_point.canvasClicked.connect(self.click_button_orientation)
 
 
@@ -96,9 +113,9 @@ class Dimensions(ParentDialog):
                    
         # Set active layer and set signals
         self.iface.setActiveLayer(self.layer_node)
-        QObject.disconnect(self.emit_point, SIGNAL("canvasClicked(const QgsPoint &, Qt::MouseButton)"), self.click_button_orientation)
+        self.emit_point.canvasClicked.disconnect(self.click_button_orientation)
         self.canvas.xyCoordinates.connect(self.mouse_move)
-        QObject.connect(self.emit_point, SIGNAL("canvasClicked(const QgsPoint &, Qt::MouseButton)"), self.click_button_snapping)
+        self.emit_point.canvasClicked.connect(self.click_button_snapping)
 
 
     def mouse_move(self, p):
@@ -143,7 +160,11 @@ class Dimensions(ParentDialog):
         self.iface.setActiveLayer(layer)
         layer.startEditing()
 
+<<<<<<< HEAD
         snapper = self.snapper_manager.get_snapper()
+=======
+        snapper = self.get_snapper()
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         map_point = self.canvas.getCoordinateTransform().transform(point)
         x = map_point.x()
         y = map_point.y()
@@ -206,12 +227,17 @@ class Dimensions(ParentDialog):
         self.timer_map_tips = QTimer(self.canvas)
         self.map_tip_node = QgsMapTip()
         self.map_tip_connec = QgsMapTip()
-        self.canvas.connect(self.canvas, SIGNAL("xyCoordinates(const QgsPoint&)"), self.map_tip_changed)
-        self.canvas.connect(self.timer_map_tips, SIGNAL("timeout()"), self.show_map_tip)
-        
-        self.timer_map_tips_clear = QTimer(self.canvas)        
-        self.canvas.connect(self.timer_map_tips_clear, SIGNAL("timeout()"), self.clear_map_tip)
 
+        self.canvas.xyCoordinates.connect(self.map_tip_changed)
+        # TODO 3.x
+        if Qgis.QGIS_VERSION_INT < 29900:
+            self.canvas.connect(self.timer_map_tips, SIGNAL("timeout()"), self.show_map_tip)
+            self.timer_map_tips_clear = QTimer(self.canvas)
+            #self.canvas.connect(self.timer_map_tips_clear, SIGNAL("timeout()"), self.clear_map_tip)
+        else:
+            self.timer_map_tips.timeout.connect(self.show_map_tip)
+            self.timer_map_tips_clear = QTimer(self.canvas)
+            self.timer_map_tips_clear.timeout.connect(self.clear_map_tip)
             
     def map_tip_changed(self, p):
         """ SLOT. Initialize the Timer to show MapTips on the map """

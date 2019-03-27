@@ -1,10 +1,11 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.
 """
 
+<<<<<<< HEAD
 # -*- coding: utf-8 -*-   
 try:
     from qgis.core import Qgis
@@ -18,6 +19,24 @@ else:
     
 from functools import partial
 
+=======
+
+# -*- coding: utf-8 -*-
+try:
+    from qgis.core import Qgis
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    pass
+else:
+    from builtins import str
+
+from functools import partial
+
+from qgis.PyQt.QtWidgets import QAbstractItemView, QTableView
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 import utils_giswater
 from giswater.ui_manager import AddElement                
 from giswater.ui_manager import ElementManagement
@@ -77,16 +96,17 @@ class ManageElement(ParentManage):
 
         # Fill combo boxes of the form and related events
         self.dlg_add_element.element_type.currentIndexChanged.connect(partial(self.filter_elementcat_id))
-
+        self.dlg_add_element.element_type.currentIndexChanged.connect(partial(self.update_location_cmb))
         # Fill combo boxes
         sql = "SELECT DISTINCT(elementtype_id) FROM " + self.schema_name + ".cat_element ORDER BY elementtype_id"
         rows = self.controller.get_rows(sql)
         utils_giswater.fillComboBox(self.dlg_add_element, "element_type", rows, False)
         self.populate_combo(self.dlg_add_element, "state", "value_state", "name")
         self.populate_combo(self.dlg_add_element, "expl_id", "exploitation", "name")
+
         sql = ("SELECT location_type"
                " FROM " + self.schema_name + ".man_type_location"
-               " WHERE feature_type = 'ELEMENT' " 
+               " WHERE feature_type = 'ELEMENT' "
                " ORDER BY location_type")
         rows = self.controller.get_rows(sql, commit=self.autocommit)
         utils_giswater.fillComboBox(self.dlg_add_element, "location_type", rows)
@@ -111,6 +131,7 @@ class ManageElement(ParentManage):
         self.set_completer_object(self.dlg_add_element, table_object)
 
         # Adding auto-completion to a QLineEdit for default feature
+<<<<<<< HEAD
         #geom_type = "node"
         viewname = "ve_" + geom_type
         self.set_completer_feature_id(self.dlg_add_element.feature_id, geom_type, viewname)
@@ -118,20 +139,30 @@ class ManageElement(ParentManage):
         # Get layer element and save if is visible or not for restore when finish process
         layer_element = self.controller.get_layer_by_tablename("ve_element")
         layer_is_visible = self.controller.is_layer_visible(layer_element)
+=======
+        self.set_completer_feature_id(self.dlg_add_element.feature_id, "arc", "v_edit_arc")
+
+        # Get layer element and save if is visible or not for restore when finish process
+        layer_element = self.controller.get_layer_by_tablename("v_edit_element")
+        layer_is_visible = False
+        if layer_element:
+            layer_is_visible = self.controller.is_layer_visible(layer_element)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
         # Set signals
         self.dlg_add_element.btn_accept.clicked.connect(partial(self.manage_element_accept, table_object))
-        self.dlg_add_element.btn_accept.clicked.connect(partial(self.set_layer_visible, layer_element, layer_is_visible))
+        self.dlg_add_element.btn_accept.clicked.connect(partial(self.controller.set_layer_visible, layer_element, layer_is_visible))
         self.dlg_add_element.btn_cancel.clicked.connect(partial(self.manage_close, self.dlg_add_element, table_object, cur_active_layer))
-        self.dlg_add_element.btn_cancel.clicked.connect(partial(self.set_layer_visible, layer_element, layer_is_visible))
+        self.dlg_add_element.btn_cancel.clicked.connect(partial(self.controller.set_layer_visible, layer_element, layer_is_visible))
         self.dlg_add_element.rejected.connect(partial(self.manage_close, self.dlg_add_element, table_object, cur_active_layer))
-        self.dlg_add_element.rejected.connect(partial(self.set_layer_visible, layer_element, layer_is_visible))
+        self.dlg_add_element.rejected.connect(partial(self.controller.set_layer_visible, layer_element, layer_is_visible))
         self.dlg_add_element.tab_feature.currentChanged.connect(partial(self.tab_feature_changed, self.dlg_add_element, table_object))
         self.dlg_add_element.element_id.textChanged.connect(partial(self.exist_object, self.dlg_add_element, table_object))
         self.dlg_add_element.btn_insert.clicked.connect(partial(self.insert_feature, self.dlg_add_element, table_object))
         self.dlg_add_element.btn_delete.clicked.connect(partial(self.delete_records, self.dlg_add_element, table_object))
         self.dlg_add_element.btn_snapping.clicked.connect(partial(self.selection_init, self.dlg_add_element, table_object))
         self.dlg_add_element.btn_add_geom.clicked.connect(self.add_point)
+
         if feature:
             self.dlg_add_element.tabWidget.currentChanged.connect(partial(self.fill_tbl_new_element, self.dlg_add_element, geom_type, feature[geom_type+"_id"]))
 
@@ -140,24 +171,42 @@ class ManageElement(ParentManage):
         self.geom_type = "arc"
         self.tab_feature_changed(self.dlg_add_element, table_object)
 
+<<<<<<< HEAD
         # Force layer ve_element set active True
         self.controller.set_layer_visible(layer_element)
+=======
+        # Force layer v_edit_element set active True
+        if layer_element:
+            self.controller.set_layer_visible(layer_element)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
         # If is a new element dont need set enddate
         if self.new_element_id is True:
             # Set calendars date from config_param_user
             self.set_calendars(self.dlg_add_element, 'builtdate', 'config_param_user', 'value', 'builtdate_vdefault')
             utils_giswater.setWidgetText(self.dlg_add_element, 'num_elements', '1')
-            self.dlg_add_element.enddate.setEnabled(False)
-
+        self.update_location_cmb()
         # Open the dialog    
         self.open_dialog(self.dlg_add_element, maximize_button=False)
         return self.dlg_add_element
 
 
+<<<<<<< HEAD
     def set_layer_visible(self, layer, visible):
         """ Restore visible state when finish process """
         self.controller.set_layer_visible(layer, visible)
+=======
+    def update_location_cmb(self):
+        element_type = utils_giswater.getWidgetText(self.dlg_add_element, self.dlg_add_element.element_type)
+        sql = ("SELECT location_type FROM " + self.schema_name + ".man_type_location"
+               " WHERE feature_type = 'ELEMENT' "
+               " AND (featurecat_id = '"+str(element_type)+"' OR featurecat_id is null)"
+               " ORDER BY location_type")
+        rows = self.controller.get_rows(sql, log_sql=True, commit=self.autocommit)
+        utils_giswater.fillComboBox(self.dlg_add_element, "location_type", rows)
+        if rows:
+            utils_giswater.setCurrentIndex(self.dlg_add_element, "location_type", 0)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 
     def fill_tbl_new_element(self, dialog, geom_type, feature_id):
@@ -180,6 +229,7 @@ class ManageElement(ParentManage):
 
         # Get values from dialog
         element_id = utils_giswater.getWidgetText(self.dlg_add_element, "element_id", return_string_null=False)
+        code = utils_giswater.getWidgetText(self.dlg_add_element, "code", return_string_null=False)
         elementcat_id = utils_giswater.getWidgetText(self.dlg_add_element, "elementcat_id", return_string_null=False)
         ownercat_id = utils_giswater.getWidgetText(self.dlg_add_element, "ownercat_id", return_string_null=False)
         location_type = utils_giswater.getWidgetText(self.dlg_add_element, "location_type", return_string_null=False)
@@ -194,7 +244,6 @@ class ManageElement(ParentManage):
         if rotation == 0 or rotation is None or rotation == 'null':
             rotation = '0'
         builtdate = self.dlg_add_element.builtdate.dateTime().toString('yyyy-MM-dd')
-        enddate = self.dlg_add_element.enddate.dateTime().toString('yyyy-MM-dd')
         undelete = self.dlg_add_element.undelete.isChecked()
 
         # Check mandatory fields
@@ -241,18 +290,19 @@ class ManageElement(ParentManage):
         if row is None:
             # If object not exist perform an INSERT
             if element_id == '':
-                sql = ("INSERT INTO " + self.schema_name + ".element (elementcat_id, num_elements, state"
+                sql = ("INSERT INTO " + self.schema_name + ".v_edit_element (elementcat_id,  num_elements, state"
                        ", expl_id, rotation, comment, observ, link, undelete, builtdate"
-                       ", ownercat_id, location_type, buildercat_id, workcat_id, workcat_id_end, verified, the_geom)")
-                sql_values = (" VALUES ('" + str(elementcat_id) +"', '" + str(num_elements) + "', '" + str(state) + "', '"
+                       ", ownercat_id, location_type, buildercat_id, workcat_id, workcat_id_end, verified, the_geom, code)")
+                sql_values = (" VALUES ('" + str(elementcat_id) + "', '" + str(num_elements) + "', '" + str(state) + "', '"
                               + str(expl_id) + "', '" + str(rotation) + "', '" + str(comment) + "', '" + str(observ) + "', '"
                               + str(link) + "', '" + str(undelete) + "', '" + str(builtdate) + "'")
-            else:
-                sql = ("INSERT INTO " + self.schema_name + ".element (element_id, elementcat_id, num_elements, state"
-                       ", expl_id, rotation, comment, observ, link, undelete, builtdate"
-                       ", ownercat_id, location_type, buildercat_id, workcat_id, workcat_id_end, verified, the_geom)")
 
-                sql_values = (" VALUES ('" + str(element_id) + "', '" + str(elementcat_id) +"', '" + str(num_elements) + "', '" + str(state) + "', '"
+            else:
+                sql = ("INSERT INTO " + self.schema_name + ".v_edit_element (element_id, , elementcat_id, num_elements, state"
+                       ", expl_id, rotation, comment, observ, link, undelete, builtdate"
+                       ", ownercat_id, location_type, buildercat_id, workcat_id, workcat_id_end, verified, the_geom, code")
+
+                sql_values = (" VALUES ('" + str(element_id) + "', '" + str(num_elements) + "', '" + str(elementcat_id) + "', '" + str(num_elements) + "', '" + str(state) + "', '"
                               + str(expl_id) + "', '" + str(rotation) + "', '" + str(comment) + "', '" + str(observ) + "', '"
                               + str(link) + "', '" + str(undelete) + "', '" + str(builtdate) + "'")
 
@@ -282,9 +332,13 @@ class ManageElement(ParentManage):
                 sql_values += ", null"
             if str(self.x) != "":
                 sql_values += ", ST_SetSRID(ST_MakePoint(" + str(self.x) + "," + str(self.y) + "), " + str(srid) +")"
+                self.x = ""
             else:
                 sql_values += ", null"
-
+            if code:
+                sql_values += ", '" + str(code) + "'"
+            else:
+                sql_values += ", null"
             if element_id == '':
                 sql += sql_values + ") RETURNING element_id;"
                 new_elem_id = self.controller.execute_returning(sql, search_audit=False, log_sql=True)
@@ -306,7 +360,7 @@ class ManageElement(ParentManage):
                    ", expl_id = '" + str(expl_id) + "', rotation = '" + str(rotation) + "'"
                    ", comment = '" + str(comment) + "', observ = '" + str(observ) + "'"
                    ", link = '" + str(link) + "', undelete = '" + str(undelete) + "'"
-                   ", enddate = '" + str(enddate) + "', builtdate = '" + str(builtdate) + "'")
+                   ", builtdate = '" + str(builtdate) + "'")
             if ownercat_id:
                 sql += ", ownercat_id = '" + str(ownercat_id) + "'"
             else:
@@ -323,6 +377,10 @@ class ManageElement(ParentManage):
                 sql += ", workcat_id = '" + str(workcat_id) + "'"
             else:
                 sql += ", workcat_id = null"
+            if code:
+                sql += ", code = '" + str(code) + "'"
+            else:
+                sql += ", code = null"
             if workcat_id_end:
                 sql += ", workcat_id_end = '" + str(workcat_id_end) + "'"
             else:
@@ -371,7 +429,8 @@ class ManageElement(ParentManage):
         """ Filter QComboBox @elementcat_id according QComboBox @elementtype_id """
         
         sql = ("SELECT DISTINCT(id) FROM " + self.schema_name + ".cat_element"
-               " WHERE elementtype_id = '" + utils_giswater.getWidgetText(self.dlg_add_element, "element_type") + "'")
+               " WHERE elementtype_id = '" + utils_giswater.getWidgetText(self.dlg_add_element, "element_type") + "'"
+               " ORDER BY id")
         rows = self.controller.get_rows(sql)
         utils_giswater.fillComboBox(self.dlg_add_element, "elementcat_id", rows, False)
 

@@ -4,6 +4,7 @@ The program is free software: you can redistribute it and/or modify it under the
 General Public License as published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.
 """
+<<<<<<< HEAD
 
 # -*- coding: latin-1 -*-
 from collections import OrderedDict
@@ -21,6 +22,24 @@ else:
     from qgis.PyQt.QtCore import QDate
     from qgis.PyQt.QtWidgets import QComboBox, QCheckBox, QDateEdit, QDoubleSpinBox, QGroupBox, QSpacerItem, QSizePolicy, QLineEdit, QGridLayout, QWidget, QLabel
 
+=======
+# -*- coding: latin-1 -*-
+try:
+    from qgis.core import Qgis
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    pass
+else:
+    from builtins import range
+
+from qgis.PyQt.QtCore import QDate
+from qgis.PyQt.QtWidgets import QComboBox, QCheckBox, QDateEdit, QDoubleSpinBox, QGroupBox, QSpacerItem, QSizePolicy, QLineEdit
+from qgis.PyQt.QtWidgets import QGridLayout, QWidget, QLabel
+
+from collections import OrderedDict
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 import json
 import sys
 import operator
@@ -44,7 +63,11 @@ class ApiConfig(ApiParent):
 
     def api_config(self):
         """ Button 36: Info show info, open giswater and visit web page """
+<<<<<<< HEAD
         self.controller.restore_info()
+=======
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         self.list_update = []
 
         body = '"client":{"device":3, "infoType":100, "lang":"ES"}, '
@@ -173,11 +196,20 @@ class ApiConfig(ApiParent):
         self.get_event_combo_parent('fields', complet_list[0]['body']['form']['formTabs'])
 
         # Set signals Combo parent/child
+<<<<<<< HEAD
         self.chk_expl = self.dlg_config.tab_main.findChild(QWidget, 'chk_exploitation_vdefault')
         self.chk_dma = self.dlg_config.tab_main.findChild(QWidget, 'chk_dma_vdefault')
 
         self.chk_dma.stateChanged.connect(partial(self.check_child_to_parent, self.chk_dma,self.chk_expl))
         self.chk_expl.stateChanged.connect(partial(self.check_parent_to_child,  self.chk_expl,self.chk_dma))
+=======
+        # TODO:: Descomentar cuando la tabla config param user este populada
+        # self.chk_expl = self.dlg_config.tab_main.findChild(QWidget, 'chk_exploitation_vdefault')
+        # self.chk_dma = self.dlg_config.tab_main.findChild(QWidget, 'chk_dma_vdefault')
+        #
+        # self.chk_dma.stateChanged.connect(partial(self.check_child_to_parent, self.chk_dma,self.chk_expl))
+        # self.chk_expl.stateChanged.connect(partial(self.check_parent_to_child,  self.chk_expl,self.chk_dma))
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
         # Open form
         self.dlg_config.show()
@@ -194,26 +226,48 @@ class ApiConfig(ApiParent):
 
     def construct_form_param_user(self, row, pos):
 
+<<<<<<< HEAD
         for field in row[pos]['fields']:
             if field['label']:
                 lbl = QLabel()
                 lbl.setObjectName('lbl' + field['name'])
+=======
+        widget = None
+        for field in row[pos]['fields']:
+            if field['label']:
+                lbl = QLabel()
+                lbl.setObjectName('lbl' + field['widgetname'])
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                 lbl.setText(field['label'])
                 lbl.setMinimumSize(160, 0)
                 lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
                 chk = QCheckBox()
+<<<<<<< HEAD
                 chk.setObjectName('chk_' + field['name'])
+=======
+                chk.setObjectName('chk_' + field['widgetname'])
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                 if field['checked'] == "True":
                     chk.setChecked(True)
                 elif field['checked'] == "False":
                     chk.setChecked(False)
                 chk.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
+<<<<<<< HEAD
                 if field['widgettype'] == 'text':
                     widget = QLineEdit()
                     widget.setText(field['value'])
                     widget.lostFocus.connect(partial(self.get_values_changed_param_user, chk, widget, field))
+=======
+                if field['widgettype'] == 'text' or field['widgettype'] == 'linetext':
+                    widget = QLineEdit()
+                    widget.setText(field['value'])
+                    if Qgis.QGIS_VERSION_INT < 29900:
+                        widget.lostFocus.connect(partial(self.get_values_changed_param_user, chk, widget, field))
+                    else:
+                        widget.editingFinished.connect(partial(self.get_values_changed_param_user, chk, widget, field))
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                     widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
                 elif field['widgettype'] == 'combo':
                     widget = QComboBox()
@@ -238,8 +292,15 @@ class ApiConfig(ApiParent):
                         widget.setValue(value)
                     widget.valueChanged.connect(partial(self.get_values_changed_param_user, chk, widget, field))
                     widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+<<<<<<< HEAD
 
                 widget.setObjectName(field['name'])
+=======
+                else:
+                    pass
+
+                widget.setObjectName(field['widgetname'])
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
                 # Set signals
                 chk.stateChanged.connect(partial(self.get_values_checked_param_user, chk, widget, field))
@@ -280,29 +341,56 @@ class ApiConfig(ApiParent):
                     self.order_widgets(field, self.system_form, lbl, chk, widget)
 
     def construct_form_param_system(self, row, pos):
+<<<<<<< HEAD
         for field in row[pos]['fields']:
             if field['label']:
                 lbl = QLabel()
                 lbl.setObjectName('lbl' + field['name'])
+=======
+
+        widget = None
+        for field in row[pos]['fields']:
+            if field['label']:
+                lbl = QLabel()
+                lbl.setObjectName('lbl' + field['widgetname'])
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                 lbl.setText(field['label'])
                 lbl.setMinimumSize(160, 0)
                 lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
+<<<<<<< HEAD
                 if field['widgettype'] == 'text':
                     widget = QLineEdit()
                     widget.setText(field['value'])
                     widget.lostFocus.connect(partial(self.get_values_changed_param_system, widget))
+=======
+                if field['widgettype'] == 'text' or field['widgettype'] == 'linetext':
+                    widget = QLineEdit()
+                    widget.setText(field['value'])
+                    if Qgis.QGIS_VERSION_INT < 29900:
+                        widget.lostFocus.connect(partial(self.get_values_changed_param_system, widget))
+                    else:
+                        widget.editingFinished.connect(partial(self.get_values_changed_param_system, widget))
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                     widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
                 elif field['widgettype'] == 'combo':
                     widget = QComboBox()
                     self.populate_combo(widget, field)
                     widget.currentIndexChanged.connect(partial(self.get_values_changed_param_system, widget))
                     widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+<<<<<<< HEAD
                 elif field['widgettype'] == 'check':
                     widget = QCheckBox()
                     if field['value'].lower() == 'true':
                         widget.setChecked(True)
                     elif field['value'].lower() == 'false':
+=======
+                elif field['widgettype'] == 'checkbox':
+                    widget = QCheckBox()
+                    if field['value'].lower() == 'true':
+                        widget.setChecked(True)
+                    elif field['value'].lower() == 'FALSE':
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                         widget.setChecked(False)
                     widget.stateChanged.connect(partial(self.get_values_changed_param_system, widget))
                     widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -320,8 +408,15 @@ class ApiConfig(ApiParent):
                         widget.setValue(value)
                     widget.valueChanged.connect(partial(self.get_values_changed_param_system, widget))
                     widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+<<<<<<< HEAD
 
                 widget.setObjectName(field['name'])
+=======
+                else:
+                    pass
+
+                widget.setObjectName(field['widgetname'])
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 
                 # Order Widgets
@@ -365,7 +460,11 @@ class ApiConfig(ApiParent):
         if fields == 'fields':
             for field in row[0]["fields"]:
                 if field['isparent']:
+<<<<<<< HEAD
                     widget = self.dlg_config.findChild(QComboBox, field['name'])
+=======
+                    widget = self.dlg_config.findChild(QComboBox, field['widgetname'])
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
                     widget.currentIndexChanged.connect(partial(self.fill_child, widget))
 
 
@@ -396,6 +495,11 @@ class ApiConfig(ApiParent):
         # TODO cambiar por gw_api_getchilds
         sql = ("SELECT " + self.schema_name + ".gw_api_get_combochilds('config" + "' ,'' ,'' ,'" + str(combo_parent) + "', '" + str(combo_id) + "','')")
         row = self.controller.get_row(sql, log_sql=True)
+<<<<<<< HEAD
+=======
+        self.controller.log_info(str(sql))
+        self.controller.log_info(str(row))
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         #TODO::Refactor input and output for function "gw_api_get_combochilds" and refactor "row[0]['fields']"
         for combo_child in row[0]['fields']:
             if combo_child is not None:

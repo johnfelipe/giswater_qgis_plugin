@@ -1,13 +1,13 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU 
 General Public License as published by the Free Software Foundation, either version 3 of the License, 
 or (at your option) any later version.
 """
-
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -26,6 +26,24 @@ else:
 
 from qgis.core import QgsFeatureRequest, QgsPoint
 from qgis.gui import QgsMapToolEmitPoint, QgsVertexMarker
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from qgis.PyQt.QtGui import QStringListModel
+else:
+    from qgis.PyQt.QtCore import QStringListModel
+    from builtins import str
+    from builtins import range
+
+from qgis.core import QgsFeatureRequest, QgsPoint
+from qgis.gui import QgsMapToolEmitPoint, QgsVertexMarker
+from qgis.PyQt.QtWidgets import QTableView, QDateEdit, QLineEdit, QTextEdit, QDateTimeEdit, QComboBox, QCompleter, QAbstractItemView
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtSql import QSqlTableModel
+from qgis.PyQt.QtCore import Qt, QPoint, QDate
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 from functools import partial
 
@@ -50,6 +68,7 @@ class ParentManage(ParentAction, object):
         self.lazy_widget = None
         self.workcat_id_end = None
         self.xyCoordinates_conected = False
+        self.remove_ids = True
 
 
     def reset_lists(self):
@@ -175,17 +194,22 @@ class ParentManage(ParentAction, object):
                 if row_aux:
                     expl_id = row_aux[0]
 
-            utils_giswater.setWidgetText(dialog, "num_elements", row['num_elements'])
-            utils_giswater.setWidgetText(dialog, "state", state)
-            utils_giswater.setWidgetText(dialog, "expl_id", expl_id)
+            utils_giswater.setWidgetText(dialog, "code", row['code'])
             sql = ("SELECT elementtype_id FROM " + self.schema_name + ".cat_element"
                    " WHERE id = '" + str(row['elementcat_id']) + "'")
             row_type = self.controller.get_row(sql)
             if row_type:
                 utils_giswater.setWidgetText(dialog, "element_type", row_type[0])
+
+            utils_giswater.setWidgetText(dialog, "elementcat_id", row['elementcat_id'])
+            utils_giswater.setWidgetText(dialog, "num_elements", row['num_elements'])
+            utils_giswater.setWidgetText(dialog, "state", state)
+            utils_giswater.setWidgetText(dialog, "expl_id", expl_id)
             utils_giswater.setWidgetText(dialog, "ownercat_id", row['ownercat_id'])
             utils_giswater.setWidgetText(dialog, "location_type", row['location_type'])
             utils_giswater.setWidgetText(dialog, "buildercat_id", row['buildercat_id'])
+            builtdate = QDate.fromString(str(row['builtdate']), 'yyyy-MM-dd')
+            dialog.builtdate.setDate(builtdate)
             utils_giswater.setWidgetText(dialog, "workcat_id", row['workcat_id'])
             utils_giswater.setWidgetText(dialog, "workcat_id_end", row['workcat_id_end'])
             utils_giswater.setWidgetText(dialog, "comment", row['comment'])
@@ -193,13 +217,8 @@ class ParentManage(ParentAction, object):
             utils_giswater.setWidgetText(dialog, "link", row['link'])
             utils_giswater.setWidgetText(dialog, "verified", row['verified'])
             utils_giswater.setWidgetText(dialog, "rotation", row['rotation'])
-            if str(row['undelete'])== 'True':
+            if str(row['undelete']) == 'True':
                 dialog.undelete.setChecked(True)
-            builtdate = QDate.fromString(str(row['builtdate']), 'yyyy-MM-dd')
-            enddate = QDate.fromString(str(row['enddate']), 'yyyy-MM-dd')
-
-            dialog.builtdate.setDate(builtdate)
-            dialog.enddate.setDate(enddate)
             
               
     def get_records_geom_type(self, dialog, table_object, geom_type):
@@ -240,8 +259,8 @@ class ParentManage(ParentAction, object):
 
         # Check if we already have data with selected object_id
         sql = ("SELECT * " 
-            " FROM " + self.schema_name + "." + str(table_object) + ""
-            " WHERE " + str(field_object_id) + " = '" + str(object_id) + "'")
+               " FROM " + self.schema_name + "." + str(table_object) + ""
+               " WHERE " + str(field_object_id) + " = '" + str(object_id) + "'")
         row = self.controller.get_row(sql, log_info=False)
 
         # If object_id not found: Clear data
@@ -265,12 +284,8 @@ class ParentManage(ParentAction, object):
             self.reset_model(dialog, table_object, "element")
             if self.project_type == 'ud':
                 self.reset_model(dialog, table_object, "gully")
-            if table_object != 'doc':
-                dialog.enddate.setEnabled(False)
-            return
 
-        if table_object != 'doc':
-            dialog.enddate.setEnabled(True)
+            return
 
         # Fill input widgets with data of the @row
         self.fill_widgets(dialog, table_object, row)
@@ -355,6 +370,7 @@ class ParentManage(ParentAction, object):
 
 
     def mouse_move(self, p):
+
         self.snapped_point = None
         self.vertex_marker.hide()
         map_point = self.canvas.getCoordinateTransform().transform(p)
@@ -389,6 +405,7 @@ class ParentManage(ParentAction, object):
         self.controller.show_info(message)
         self.emit_point.canvasClicked.disconnect()
         self.canvas.xyCoordinates.disconnect()
+        self.xyCoordinates_conected = False
         self.iface.mapCanvas().refreshAllLayers()
         self.vertex_marker.hide()
 
@@ -398,13 +415,22 @@ class ParentManage(ParentAction, object):
         self.enddate = utils_giswater.getCalendarDate(dialog, "enddate")
         self.workcat_id_end = utils_giswater.getWidgetText(dialog, "workcat_id_end")
         self.description = utils_giswater.getWidgetText(dialog, "descript")
+<<<<<<< HEAD
         
         
+=======
+
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
     def tab_feature_changed(self, dialog, table_object, feature_id=None):
         """ Set geom_type and layer depending selected tab
             @table_object = ['doc' | 'element' | 'cat_work']
         """
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         self.get_values_from_form(dialog)
         if dialog.tab_feature.currentIndex() == 3:
             dialog.btn_snapping.setEnabled(False)
@@ -732,8 +758,8 @@ class ParentManage(ParentAction, object):
         if query:
             self.remove_selection()
         # Update list
-        self.list_ids[self.geom_type] = self.ids                        
-        
+        self.list_ids[self.geom_type] = self.ids
+        self.enable_feature_type(dialog)
         self.connect_signal_selection_changed(dialog, table_object)
 
 
@@ -781,9 +807,10 @@ class ParentManage(ParentAction, object):
         """ Slot function for signal 'canvas.selectionChanged' """
 
         self.disconnect_signal_selection_changed()
-
         field_id = geom_type + "_id"
-        self.ids = []
+
+        if self.remove_ids:
+            self.ids = []
 
         # Iterate over all layers of the group
         for layer in self.layers[self.geom_type]:
@@ -834,7 +861,7 @@ class ParentManage(ParentAction, object):
         # Remove selection in generic 'v_edit' layers
         if self.plan_om == 'plan':
             self.remove_selection(False)
-                    
+        self.enable_feature_type(dialog)
         self.connect_signal_selection_changed(dialog, table_object)
 
 
@@ -847,7 +874,32 @@ class ParentManage(ParentAction, object):
         self.controller.execute_sql(sql)
 
 
+<<<<<<< HEAD
     def insert_feature(self, dialog, table_object, query=False):
+=======
+    def enable_feature_type(self, dialog):
+
+        feature_type = dialog.findChild(QComboBox, 'feature_type')
+        assigned_to = dialog.findChild(QComboBox, 'cmb_assigned_to')
+        visit_class = dialog.findChild(QComboBox, 'cmb_visit_class')
+        table = dialog.findChild(QTableView, 'tbl_relation')
+        if feature_type is not None and table is not None:
+            if len(self.ids) > 0:
+                feature_type.setEnabled(False)
+                if assigned_to is not None:
+                    assigned_to.setEnabled(False)
+                if assigned_to is not None:
+                    visit_class.setEnabled(False)
+            else:
+                feature_type.setEnabled(True)
+                if assigned_to is not None:
+                    assigned_to.setEnabled(True)
+                if assigned_to is not None:
+                    visit_class.setEnabled(True)
+
+
+    def insert_feature(self, dialog, table_object, query=False, remove_ids=True):
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         """ Select feature with entered id. Set a model with selected filter.
             Attach that model to selected table
         """
@@ -855,7 +907,8 @@ class ParentManage(ParentAction, object):
         self.disconnect_signal_selection_changed()
 
         # Clear list of ids
-        self.ids = []
+        if remove_ids:
+            self.ids = []
         field_id = self.geom_type + "_id"
         feature_id = utils_giswater.getWidgetText(dialog, "feature_id")
         if feature_id == 'null':
@@ -871,7 +924,8 @@ class ParentManage(ParentAction, object):
                 for feature in features:
                     # Append 'feature_id' into the list
                     selected_id = feature.attribute(field_id)
-                    self.ids.append(selected_id)
+                    if selected_id not in self.ids:
+                        self.ids.append(selected_id)
             if feature_id not in self.ids:
                 # If feature id doesn't exist in list -> add
                 self.ids.append(str(feature_id))
@@ -905,7 +959,7 @@ class ParentManage(ParentAction, object):
 
         # Update list
         self.list_ids[self.geom_type] = self.ids
-
+        self.enable_feature_type(dialog)
         self.connect_signal_selection_changed(dialog, table_object)
 
 
@@ -952,7 +1006,8 @@ class ParentManage(ParentAction, object):
 
     def fill_table_object(self, widget, table_name, expr_filter=None):
         """ Set a model with selected filter. Attach that model to selected table """
-
+        if self.schema_name not in table_name:
+            table_name = self.schema_name + "." + table_name
         # Set model
         model = QSqlTableModel()
         model.setTable(table_name)
@@ -978,7 +1033,6 @@ class ParentManage(ParentAction, object):
         object_id = utils_giswater.getWidgetText(dialog, widget_txt)
         if object_id != 'null':
             expr = field_object_id + "::text ILIKE '%" + str(object_id) + "%'"
-            self.controller.log_info(str(expr))
             # Refresh model with selected filter
             widget_table.model().setFilter(expr)
             widget_table.model().select()
@@ -1038,7 +1092,7 @@ class ParentManage(ParentAction, object):
         widget_id = table_object + "_id"
         if table_object == "element":
             field_object_id = table_object + "_id"
-        if table_object == "om_visit":
+        if table_object == "v_ui_om_visit":
             widget_id = "visit_id"
         elif "v_ui_visit_x_" in table_object:
             field_object_id = "visit_id"
@@ -1056,7 +1110,7 @@ class ParentManage(ParentAction, object):
         elif table_object == "element":
             self.manage_element(new_element_id=False)
             utils_giswater.setWidgetText(self.dlg_add_element, widget_id, selected_object_id)
-        elif table_object == "om_visit":
+        elif table_object == "v_ui_om_visit":
             self.manage_visit(visit_id=selected_object_id)
         elif "v_ui_visit_x_" in table_object:
             self.manage_visit(visit_id=selected_object_id)
@@ -1073,6 +1127,7 @@ class ParentManage(ParentAction, object):
     def hide_generic_layers(self, visible=False):       
         """ Hide generic layers """
         
+<<<<<<< HEAD
         layer = self.controller.get_layer_by_tablename("ve_arc")
         self.controller.set_layer_visible(layer, visible)
         
@@ -1088,6 +1143,25 @@ class ParentManage(ParentAction, object):
         if self.project_type == 'ud':
             layer = self.controller.get_layer_by_tablename("ve_gully")
             self.controller.set_layer_visible(layer, visible)
+=======
+        layer = self.controller.get_layer_by_tablename("v_edit_arc")
+        if layer:
+            self.controller.set_layer_visible(layer)
+        layer = self.controller.get_layer_by_tablename("v_edit_node")
+        if layer:
+            self.controller.set_layer_visible(layer)
+        layer = self.controller.get_layer_by_tablename("v_edit_connec")
+        if layer:
+            self.controller.set_layer_visible(layer)
+        layer = self.controller.get_layer_by_tablename("v_edit_element")
+        if layer:
+            self.controller.set_layer_visible(layer)
+            
+        if self.project_type == 'ud':
+            layer = self.controller.get_layer_by_tablename("v_edit_gully")
+            if layer:
+                self.controller.set_layer_visible(layer)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         
     
     def connect_signal_selection_changed(self, dialog, table_object, query=False):

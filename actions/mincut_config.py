@@ -1,13 +1,13 @@
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.
 """
-
 # -*- coding: utf-8 -*-
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -19,6 +19,21 @@ else:
     from qgis.PyQt.QtCore import Qt, QStringListModel
     from qgis.PyQt.QtWidgets import QTableView, QMenu, QPushButton, QLineEdit, QCompleter, QAbstractItemView
     from qgis.PyQt.QtSql import QSqlTableModel
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from qgis.PyQt.QtGui import QStringListModel
+else:
+    from qgis.PyQt.QtCore import QStringListModel
+    from builtins import str
+    from builtins import range
+
+from qgis.PyQt.QtCore import Qt, QDate
+from qgis.PyQt.QtWidgets import QTableView, QMenu, QPushButton, QLineEdit, QCompleter, QAbstractItemView
+from qgis.PyQt.QtSql import QSqlTableModel
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
 from functools import partial
 
@@ -156,7 +171,11 @@ class MincutConfig(ParentAction):
         # Create the dialog and signals
         self.dlg_min_edit = Mincut_edit()
         self.load_settings(self.dlg_min_edit)
+        self.set_dates()
+        self.dlg_min_edit.date_from.setEnabled(False)
+        self.dlg_min_edit.date_to.setEnabled(False)
         self.set_icon(self.dlg_min_edit.btn_selector_mincut, "191")
+        self.set_icon(self.dlg_min_edit.btn_show, "191")
 
         self.tbl_mincut_edit = self.dlg_min_edit.findChild(QTableView, "tbl_mincut_edit")
         self.txt_mincut_id = self.dlg_min_edit.findChild(QLineEdit, "txt_mincut_id")
@@ -175,14 +194,24 @@ class MincutConfig(ParentAction):
 
         model.setStringList(values)
         self.completer.setModel(model)
+<<<<<<< HEAD
         self.txt_mincut_id.textChanged.connect(partial(self.filter_by_id, self.tbl_mincut_edit, self.txt_mincut_id, "ve_ui_mincut_result_cat"))
 
+=======
+        self.txt_mincut_id.textChanged.connect(partial(self.filter_by_id, self.tbl_mincut_edit))
+        self.dlg_min_edit.date_from.dateChanged.connect(partial(self.filter_by_id, self.tbl_mincut_edit))
+        self.dlg_min_edit.date_to.dateChanged.connect(partial(self.filter_by_id, self.tbl_mincut_edit))
+        self.dlg_min_edit.cmb_expl.currentIndexChanged.connect(partial(self.filter_by_id, self.tbl_mincut_edit))
+        self.dlg_min_edit.btn_show.clicked.connect(partial(self.show_selection))
+        self.dlg_min_edit.btn_cancel_mincut.clicked.connect(partial(self.set_state_cancel_mincut))
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         self.dlg_min_edit.tbl_mincut_edit.doubleClicked.connect(self.open_mincut)
         self.dlg_min_edit.btn_cancel.clicked.connect(partial(self.close_dialog, self.dlg_min_edit))
         self.dlg_min_edit.rejected.connect(partial(self.close_dialog, self.dlg_min_edit))
         self.dlg_min_edit.btn_delete.clicked.connect(partial(self.delete_mincut_management, self.tbl_mincut_edit, "ve_ui_mincut_result_cat", "id"))
         self.dlg_min_edit.btn_selector_mincut.clicked.connect(partial(self.mincut_selector))
 
+<<<<<<< HEAD
         # Fill ComboBox state
         sql = ("SELECT name"
                " FROM " + self.schema_name + ".anl_mincut_cat_state"
@@ -190,6 +219,10 @@ class MincutConfig(ParentAction):
         rows = self.controller.get_rows(sql)
         utils_giswater.fillComboBox(self.dlg_min_edit, "state_edit", rows)
         self.dlg_min_edit.state_edit.activated.connect(partial(self.filter_by_state, self.tbl_mincut_edit, self.dlg_min_edit.state_edit, "ve_ui_mincut_result_cat"))
+=======
+        self.populate_combos()
+        self.dlg_min_edit.state_edit.activated.connect(partial(self.filter_by_id, self.tbl_mincut_edit))
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
         # Set a model with selected filter. Attach that model to selected table
         self.fill_table_mincut_management(self.tbl_mincut_edit, self.schema_name + ".ve_ui_mincut_result_cat")
@@ -200,6 +233,66 @@ class MincutConfig(ParentAction):
         # Open the dialog
         self.dlg_min_edit.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg_min_edit.show()
+
+
+    def set_state_cancel_mincut(self):
+        selected_list = self.tbl_mincut_edit.selectionModel().selectedRows()
+        if len(selected_list) == 0:
+            message = "Any record selected"
+            self.controller.show_warning(message)
+            return
+        inf_text = ""
+        list_id = ""
+        for i in range(0, len(selected_list)):
+            row = selected_list[i].row()
+            id_ = self.tbl_mincut_edit.model().record(row).value("id")
+            inf_text += str(id_)+", "
+            list_id = list_id+"'"+str(id_)+"', "
+        inf_text = inf_text[:-2]
+        list_id = list_id[:-2]
+        msg = "Are you sure you want to cancel these mincuts?"
+        title = "Cancel mincuts"
+        answer = self.controller.ask_question(msg, title, inf_text)
+        if answer:
+            sql = ("UPDATE " + self.schema_name + ".anl_mincut_result_cat SET mincut_state = 3 "
+                   " WHERE id::text IN ("+list_id+")")
+            self.controller.execute_sql(sql, log_sql=False)
+            self.tbl_mincut_edit.model().select()
+
+
+
+    def show_selection(self):
+        selected_list = self.tbl_mincut_edit.selectionModel().selectedRows()
+        if len(selected_list) == 0:
+            message = "Any record selected"
+            self.controller.show_warning(message)
+            return
+
+        sql = ("DELETE FROM " + self.schema_name + ".anl_mincut_result_selector WHERE cur_user = current_user;")
+        for i in range(0, len(selected_list)):
+            row = selected_list[i].row()
+            id_ = self.tbl_mincut_edit.model().record(row).value("id")
+            sql += ("\nINSERT INTO " + self.schema_name + ".anl_mincut_result_selector (cur_user, result_id) "
+                    "  VALUES(current_user, " + str(id_) + ");")
+        status = self.controller.execute_sql(sql)
+        if not status:
+            message = "Error updating table"
+            self.controller.show_warning(message, parameter='anl_mincut_result_selector')
+        self.mincut.set_visible_mincut_layers(True)
+
+
+    def populate_combos(self):
+        # Fill ComboBox state
+        sql = ("SELECT name"
+               " FROM " + self.schema_name + ".anl_mincut_cat_state"
+               " ORDER BY name")
+        rows = self.controller.get_rows(sql)
+        utils_giswater.fillComboBox(self.dlg_min_edit, "state_edit", rows)
+
+        sql = ("SELECT expl_id, name FROM " + self.schema_name + ".exploitation ORDER BY name")
+        rows = [('', '')]
+        rows.extend(self.controller.get_rows(sql, log_sql=False))
+        utils_giswater.set_item_data(self.dlg_min_edit.cmb_expl, rows, 1)
 
 
     def mincut_selector(self):
@@ -245,35 +338,63 @@ class MincutConfig(ParentAction):
         self.mincut.load_mincut(result_mincut_id)
 
 
-    def filter_by_id(self, table, widget_txt, tablename):
-
-        id_ = utils_giswater.getWidgetText(self.dlg_min_edit, widget_txt)
-        if id_ != 'null':
-            expr = " id = '" + id_ + "'"
-            # Refresh model with selected filter
-            table.model().setFilter(expr)
-            table.model().select()
+    def filter_by_id(self, qtable):
+        expr = ""
+        id_ = utils_giswater.getWidgetText(self.dlg_min_edit, self.dlg_min_edit.txt_mincut_id, False, False)
+        state = utils_giswater.getWidgetText(self.dlg_min_edit, self.dlg_min_edit.state_edit, False, False)
+        expl = utils_giswater.get_item_data(self.dlg_min_edit, self.dlg_min_edit.cmb_expl, 1)
+        dates_filter = ""
+        if state == '':
+            self.dlg_min_edit.date_from.setEnabled(False)
+            self.dlg_min_edit.date_to.setEnabled(False)
         else:
-            self.fill_table_mincut_management(self.tbl_mincut_edit, self.schema_name + "." + tablename)
+            self.dlg_min_edit.date_from.setEnabled(True)
+            self.dlg_min_edit.date_to.setEnabled(True)
 
+            # Get selected dates
+            visit_start = self.dlg_min_edit.date_from.date()
+            visit_end = self.dlg_min_edit.date_to.date()
+            date_from = visit_start.toString('yyyyMMdd 00:00:00')
+            date_to = visit_end.toString('yyyyMMdd 23:59:59')
+            if date_from > date_to:
+                message = "Selected date interval is not valid"
+                self.controller.show_warning(message)
+                return
 
-    def filter_by_state(self, table, widget, tablename):
+            # Create interval dates
+            format_low = 'yyyy-MM-dd 00:00:00.000'
+            format_high = 'yyyy-MM-dd 23:59:59.999'
+            interval = "'{}'::timestamp AND '{}'::timestamp".format(
+                visit_start.toString(format_low), visit_end.toString(format_high))
+            if state in 'Planified':
+                utils_giswater.setWidgetText(self.dlg_min_edit, self.dlg_min_edit.lbl_date_from, 'Date from: forecast_start')
+                utils_giswater.setWidgetText(self.dlg_min_edit, self.dlg_min_edit.lbl_date_to, 'Date to: forecast_end')
+                dates_filter = ("AND (forecast_start BETWEEN {0}) AND (forecast_end BETWEEN {0})".format(interval))
+            elif state in ('In Progress', 'Finished'):
+                utils_giswater.setWidgetText(self.dlg_min_edit, self.dlg_min_edit.lbl_date_from, 'Date from: exec_start')
+                utils_giswater.setWidgetText(self.dlg_min_edit, self.dlg_min_edit.lbl_date_to, 'Date to: exec_end')
+                dates_filter = ("AND (exec_start BETWEEN {0}) AND (exec_end BETWEEN {0})".format(interval))
+            else:
+                utils_giswater.setWidgetText(self.dlg_min_edit, self.dlg_min_edit.lbl_date_from, 'Date from:')
+                utils_giswater.setWidgetText(self.dlg_min_edit, self.dlg_min_edit.lbl_date_to, 'Date to:')
+        expr += " (id::text ILIKE '%" + id_ + "%'"
+        expr += " OR work_order::text ILIKE '%" + id_ + "%')"
+        expr += " " + dates_filter + ""
+        if state != '':
+            expr += " AND state::text ILIKE '%" + state + "%'"
+        expr += " AND exp_name::text ILIKE '%" + expl + "%'"
         
-        state = utils_giswater.getWidgetText(self.dlg_min_edit, widget)
-        if state != 'null':
-            expr_filter = " state = '" + str(state) + "'"
-            # Refresh model with selected expr_filter
-            table.model().setFilter(expr_filter)
-            table.model().select()
-        else:
-            self.fill_table_mincut_management(self.tbl_mincut_edit, self.schema_name + "." + tablename)
+        # Refresh model with selected filter
+        qtable.model().setFilter(expr)
+        qtable.model().select()
+
 
 
     def fill_table_mincut_management(self, widget, table_name):
         """ Set a model with selected filter. Attach that model to selected table """
 
         # Set model
-        model = QSqlTableModel();
+        model = QSqlTableModel()
         model.setTable(table_name)
         model.setEditStrategy(QSqlTableModel.OnManualSubmit)
         model.sort(0, 1)
@@ -332,5 +453,25 @@ class MincutConfig(ParentAction):
             layer = self.controller.get_layer_by_tablename('v_anl_mincut_result_hydrometer')
             if layer is not None:
                 layer.triggerRepaint()
+<<<<<<< HEAD
                 
                 
+=======
+
+    def set_dates(self):
+
+        sql = ("SELECT MIN(LEAST(forecast_start, exec_start)), MAX(GREATEST(forecast_end, exec_end))"
+               " FROM {}.{}".format(self.schema_name, 'v_ui_anl_mincut_result_cat'))
+        row = self.controller.get_row(sql, log_sql=True)
+        if row:
+            if row[0]:
+                self.dlg_min_edit.date_from.setDate(row[0])
+            else:
+                current_date = QDate.currentDate()
+                self.dlg_min_edit.date_from.setDate(current_date)
+            if row[1]:
+                self.dlg_min_edit.date_to.setDate(row[1])
+            else:
+                current_date = QDate.currentDate()
+                self.dlg_min_edit.date_to.setDate(current_date)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6

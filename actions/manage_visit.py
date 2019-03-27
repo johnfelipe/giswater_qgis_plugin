@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-This file is part of Giswater 2.0
+This file is part of Giswater 3.1
 The program is free software: you can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.
 """
 try:
     from qgis.core import Qgis
+<<<<<<< HEAD
 except:
     from qgis.core import QGis as Qgis
 
@@ -17,6 +18,21 @@ else:
     from qgis.PyQt.QtCore import Qt, QDate, pyqtSignal, QObject, QStringListModel
     from qgis.PyQt.QtWidgets import QAbstractItemView, QDialogButtonBox, QCompleter, QLineEdit, QTableView, QPushButton, QComboBox, QTabWidget    
 
+=======
+except ImportError:
+    from qgis.core import QGis as Qgis
+
+if Qgis.QGIS_VERSION_INT < 29900:
+    from qgis.PyQt.QtGui import QStringListModel
+else:
+    from qgis.PyQt.QtCore import QStringListModel
+    from builtins import str
+    from builtins import range
+
+from qgis.PyQt.QtCore import Qt, QDate, pyqtSignal, QObject
+from qgis.PyQt.QtWidgets import QAbstractItemView, QDialogButtonBox, QCompleter, QLineEdit, QTableView
+from qgis.PyQt.QtWidgets import QTextEdit, QPushButton, QComboBox, QTabWidget
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 import os
 import sys
 import subprocess
@@ -51,7 +67,7 @@ class ManageVisit(ParentManage, QObject):
         ParentManage.__init__(self, iface, settings, controller, plugin_dir)
 
 
-    def manage_visit(self, visit_id=None, geom_type=None, feature_id=None, single_tool=True, expl_id=None, is_new=False):
+    def manage_visit(self, visit_id=None, geom_type=None, feature_id=None, single_tool=True, expl_id=None):
         """ Button 64. Add visit.
         if visit_id => load record related to the visit_id
         if geom_type => lock geom_type in relations tab
@@ -79,8 +95,6 @@ class ManageVisit(ParentManage, QObject):
         # Get expl_id from previus dialog
         self.expl_id = expl_id
 
-        # Set if is new visit or come from info
-        self.is_new = is_new
 
         # Get layers of every geom_type
         self.reset_lists()
@@ -110,7 +124,8 @@ class ManageVisit(ParentManage, QObject):
         # tab events
         self.tabs = self.dlg_add_visit.findChild(QTabWidget, 'tab_widget')
         self.button_box = self.dlg_add_visit.findChild(QDialogButtonBox, 'button_box')
-        self.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        if visit_id is None:
+            self.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
 
         # Tab 'Data'/'Visit'
         self.visit_id = self.dlg_add_visit.findChild(QLineEdit, "visit_id")
@@ -172,14 +187,15 @@ class ManageVisit(ParentManage, QObject):
         # Fill combo boxes of the form and related events
         self.feature_type.currentIndexChanged.connect(partial(self.event_feature_type_selected, self.dlg_add_visit))
         self.parameter_type_id.currentIndexChanged.connect(partial(self.set_parameter_id_combo, self.dlg_add_visit))
-        self.fill_combos()
+        self.fill_combos(visit_id=visit_id)
 
         # Set autocompleters of the form
         self.set_completers()
 
         # Show id of visit. If not set, infer a new value
         if not visit_id:
-            visit_id = self.current_visit.max_pk(commit=self.autocommit) + 1
+            visit_id = self.current_visit.nextval(commit=self.autocommit)
+
         self.visit_id.setText(str(visit_id))
 
         # manage relation locking
@@ -229,7 +245,14 @@ class ManageVisit(ParentManage, QObject):
         """ Do all action when closed the dialog with Ok.
         e.g. all necessary commits and cleanings.
         A) Trigger SELECT gw_fct_om_visit_multiplier (visit_id, feature_type)
+<<<<<<< HEAD
         for multiple visits management. """
+=======
+        for multiple visits management."""
+        # tab Visit
+        if self.current_tab_index == self.tab_index('VisitTab'):
+            self.manage_leave_visit_tab()
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
 
         # notify that a new visit has been added
         self.visit_added.emit(self.current_visit.id)
@@ -261,7 +284,7 @@ class ManageVisit(ParentManage, QObject):
         if hasattr(self, 'xyCoordinates_conected'):
             if self.xyCoordinates_conected:
                 self.canvas.xyCoordinates.disconnect()
-                self.xyCoordinates_conected = None
+                self.xyCoordinates_conected = False
         self.canvas.setMapTool(self.previous_map_tool)
         # removed current working visit. This should cascade removing of all related records
         if hasattr(self, 'it_is_new_visit') and self.it_is_new_visit:
@@ -357,6 +380,7 @@ class ManageVisit(ParentManage, QObject):
         self.current_visit.ext_code = self.ext_code.text()
         self.current_visit.visitcat_id = utils_giswater.get_item_data(self.dlg_add_visit, self.dlg_add_visit.visitcat_id, 0)
         self.current_visit.descript = utils_giswater.getWidgetText(self.dlg_add_visit, 'descript', False, False)
+        self.current_visit.is_done = utils_giswater.isChecked(self.dlg_add_visit, 'is_done')
         if self.expl_id:
             self.current_visit.expl_id = self.expl_id
             
@@ -364,8 +388,13 @@ class ManageVisit(ParentManage, QObject):
         self.current_visit.upsert(commit=self.autocommit)
 
 
+<<<<<<< HEAD
     def update_relations(self):
         """ Save current selected features in tbl_relations. Steps are:
+=======
+    def update_relations(self, dialog):
+        """Save current selected features in tbl_relations. Steps are:
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         A) remove all old relations related with current visit_id.
         B) save new relations get from that listed in tbl_relations. """
         
@@ -425,6 +454,8 @@ class ManageVisit(ParentManage, QObject):
             # than save the showed records
             db_record.upsert(commit=self.autocommit)
 
+        self.enable_feature_type(dialog)
+
 
     def manage_tab_changed(self, dialog, index):
         """ Do actions when tab is exit and entered.
@@ -437,11 +468,11 @@ class ManageVisit(ParentManage, QObject):
             # need to create the relation record that is done only
             # changing tab
             if self.locked_geom_type:
-                self.update_relations()
+                self.update_relations(dialog)
 
         # tab Relation
         if self.current_tab_index == self.tab_index('RelationsTab'):
-            self.update_relations()
+            self.update_relations(dialog)
 
         # manage arriving tab
         # tab Visit
@@ -472,7 +503,6 @@ class ManageVisit(ParentManage, QObject):
                " FROM " + self.schema_name + ".om_visit_parameter"
                " WHERE UPPER (parameter_type) = '" + self.parameter_type_id.currentText().upper() + "'"
                " AND UPPER (feature_type) = '" + self.feature_type.currentText().upper() + "'")
-
         sql += " ORDER BY id"
         rows = self.controller.get_rows(sql, log_sql=True, commit=self.autocommit)
 
@@ -553,13 +583,21 @@ class ManageVisit(ParentManage, QObject):
 
         if geom_type is None:
             # Set a model with selected filter. Attach that model to selected table
-            table_object = "om_visit"
+            utils_giswater.setWidgetText(self.dlg_man, self.dlg_man.lbl_filter, 'Filter by ext_code')
+            filed_to_filter = "ext_code"
+            table_object = "v_ui_om_visit"
             expr_filter = ""
             self.fill_table_object(self.dlg_man.tbl_visit, self.schema_name + "." + table_object)
             self.set_table_columns(self.dlg_man, self.dlg_man.tbl_visit, table_object)
         else:
             # Set a model with selected filter. Attach that model to selected table
+<<<<<<< HEAD
             table_object = "v_ui_visit_x_" + str(geom_type)
+=======
+            utils_giswater.setWidgetText(self.dlg_man, self.dlg_man.lbl_filter, 'Filter by code')
+            filed_to_filter = "code"
+            table_object = "v_ui_om_visitman_x_" + str(geom_type)
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
             expr_filter = geom_type + "_id = '" + feature_id + "'"
             # Refresh model with selected filter            
             self.fill_table_object(self.dlg_man.tbl_visit, self.schema_name + "." + table_object, expr_filter)
@@ -577,7 +615,7 @@ class ManageVisit(ParentManage, QObject):
         self.dlg_man.btn_delete.clicked.connect(
             partial(self.delete_selected_object, self.dlg_man.tbl_visit, table_object))
         self.dlg_man.txt_filter.textChanged.connect(
-            partial(self.filter_visit, self.dlg_man, self.dlg_man.tbl_visit, self.dlg_man.txt_filter, table_object, expr_filter))
+            partial(self.filter_visit, self.dlg_man, self.dlg_man.tbl_visit, self.dlg_man.txt_filter, table_object, expr_filter, filed_to_filter))
 
         # set timeStart and timeEnd as the min/max dave values get from model
         current_date = QDate.currentDate()        
@@ -593,17 +631,22 @@ class ManageVisit(ParentManage, QObject):
                 self.dlg_man.date_event_to.setDate(current_date)
 
         # set date events
-        self.dlg_man.date_event_from.dateChanged.connect(partial(self.filter_visit, self.dlg_man, self.dlg_man.tbl_visit, self.dlg_man.txt_filter, table_object, expr_filter))
-        self.dlg_man.date_event_to.dateChanged.connect(partial(self.filter_visit, self.dlg_man, self.dlg_man.tbl_visit, self.dlg_man.txt_filter, table_object, expr_filter))
+        self.dlg_man.date_event_from.dateChanged.connect(partial(self.filter_visit, self.dlg_man, self.dlg_man.tbl_visit, self.dlg_man.txt_filter, table_object, expr_filter, filed_to_filter))
+        self.dlg_man.date_event_to.dateChanged.connect(partial(self.filter_visit, self.dlg_man, self.dlg_man.tbl_visit, self.dlg_man.txt_filter, table_object, expr_filter, filed_to_filter))
 
 
         # Open form
         self.open_dialog(self.dlg_man, dlg_name="visit_management")
 
 
+<<<<<<< HEAD
     def filter_visit(self, dialog, widget_table, widget_txt, table_object, expr_filter):
         """ Filter om_visit in self.dlg_man.tbl_visit based on (id AND text AND between dates) """
         
+=======
+    def filter_visit(self, dialog, widget_table, widget_txt, table_object, expr_filter, filed_to_filter):
+        """ Filter om_visit in self.dlg_man.tbl_visit based on (id AND text AND between dates)"""
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         object_id = utils_giswater.getWidgetText(dialog, widget_txt)
         visit_start = dialog.date_event_from.date()
         visit_end = dialog.date_event_to.date()
@@ -618,21 +661,29 @@ class ManageVisit(ParentManage, QObject):
         interval = "'{}'::timestamp AND '{}'::timestamp".format(
             visit_start.toString(format_low), visit_end.toString(format_high))
 
-        if table_object == "om_visit":
+        if table_object == "v_ui_om_visit":
             expr_filter += ("(startdate BETWEEN {0}) AND (enddate BETWEEN {0})".format(interval))
             if object_id != 'null':
+<<<<<<< HEAD
                 expr_filter += " AND ext_code::TEXT ILIKE '%" + str(object_id) + "%'"
+=======
+                expr_filter += " AND "+filed_to_filter+"::TEXT ILIKE '%" + str(object_id) + "%'"
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         else:
             expr_filter += ("AND (visit_start BETWEEN {0}) AND (visit_end BETWEEN {0})".format(interval))
             if object_id != 'null':
-                expr_filter += " AND visit_id::TEXT ILIKE '%" + str(object_id) + "%'"
+                expr_filter += " AND "+filed_to_filter+"::TEXT ILIKE '%" + str(object_id) + "%'"
 
         # Refresh model with selected filter
         widget_table.model().setFilter(expr_filter)
         widget_table.model().select()
 
 
+<<<<<<< HEAD
     def fill_combos(self):
+=======
+    def fill_combos(self, visit_id=None):
+>>>>>>> 844ba4c0805234c7ca398bc3ce303301d57e2fe6
         """ Fill combo boxes of the form """
 
         # Visit tab
@@ -663,6 +714,17 @@ class ManageVisit(ParentManage, QObject):
                     pass
                 except ValueError:
                     pass
+            elif visit_id is not None:
+                sql = ("SELECT visitcat_id"
+                       " FROM " + self.schema_name + ".om_visit"
+                       " WHERE id ='" + str(visit_id) + "' ")
+                id_visitcat = self.controller.get_row(sql)
+                sql = ("SELECT id, name"
+                       " FROM " + self.schema_name + ".om_visit_cat"
+                       " WHERE active is true AND id ='"+str(id_visitcat[0])+"' "
+                       " ORDER BY name")
+                row = self.controller.get_row(sql)
+                utils_giswater.set_combo_itemData(self.dlg_add_visit.visitcat_id, str(row[1]), 1)
 
         # Relations tab
         # fill feature_type
@@ -748,6 +810,7 @@ class ManageVisit(ParentManage, QObject):
         
         # check a paramet3er_id is selected (can be that no value is available)
         parameter_id = utils_giswater.get_item_data(self.dlg_add_visit, self.dlg_add_visit.parameter_id, 0)
+        parameter_text = utils_giswater.get_item_data(self.dlg_add_visit, self.dlg_add_visit.parameter_id, 1)
 
         if not parameter_id:
             message = "You need to select a valid parameter id"
@@ -787,7 +850,7 @@ class ManageVisit(ParentManage, QObject):
         self.dlg_event.btn_view_gallery.setEnabled(False)
 
         # set fixed values
-        self.dlg_event.parameter_id.setText(parameter_id)
+        self.dlg_event.parameter_id.setText(parameter_text)
 
         self.dlg_event.setWindowFlags(Qt.WindowStaysOnTopHint)
         ret = self.dlg_event.exec_()
@@ -807,9 +870,15 @@ class ManageVisit(ParentManage, QObject):
             if not hasattr(self.dlg_event, field_name):
                 continue
             if type(getattr(self.dlg_event, field_name)) is QLineEdit:
-                value = getattr(self.dlg_event, field_name).text()
+                if field_name == 'parameter_id':
+                    value = parameter_id
+                else:
+                    value = getattr(self.dlg_event, field_name).text()
+            if type(getattr(self.dlg_event, field_name)) is QTextEdit:
+                value = getattr(self.dlg_event, field_name).toPlainText()
             if type(getattr(self.dlg_event, field_name)) is QComboBox:
                 value = utils_giswater.get_item_data(self.dlg_event, getattr(self.dlg_event, field_name), index=0)
+
             if value:
                 setattr(event, field_name, value)
 
@@ -875,7 +944,7 @@ class ManageVisit(ParentManage, QObject):
             # set fixed values
             self.dlg_event.value.setText(_value)
             self.dlg_event.position_value.setText(str(position_value))
-            self.dlg_event.text.setText(text)
+            utils_giswater.setWidgetText(self.dlg_event, text, text)
             self.dlg_event.position_id.setEnabled(False)
             self.dlg_event.position_value.setEnabled(False)
 
@@ -896,7 +965,7 @@ class ManageVisit(ParentManage, QObject):
             self.dlg_event.geom1.setText(str(geom1))
             self.dlg_event.geom2.setText(str(geom2))
             self.dlg_event.geom3.setText(str(geom3))
-            self.dlg_event.text.setText(text)
+            utils_giswater.setWidgetText(self.dlg_event, text, text)
             # disable position_x fields because not allowed in multiple view
             self.dlg_event.position_id.setEnabled(True)
             self.dlg_event.position_value.setEnabled(True)
@@ -906,9 +975,8 @@ class ManageVisit(ParentManage, QObject):
             text = self.dlg_add_visit.tbl_event.model().record(0).value('text')
             self.dlg_event = EventStandard()
             self.load_settings(self.dlg_event)
-            self.populate_position_id()
             self.dlg_event.value.setText(_value)
-            self.dlg_event.text.setText(text)
+            utils_giswater.setWidgetText(self.dlg_event, text, text)
 
         # because of multiple view disable add picture and view gallery
         self.dlg_event.btn_add_picture.setEnabled(False)
@@ -920,9 +988,11 @@ class ManageVisit(ParentManage, QObject):
                 continue
             if type(getattr(self.dlg_event, field_name)) is QLineEdit:
                 value = getattr(self.dlg_event, field_name).text()
+            if type(getattr(self.dlg_event, field_name)) is QTextEdit:
+                value = getattr(self.dlg_event, field_name).toPlainText()
             if type(getattr(self.dlg_event, field_name)) is QComboBox:
                 value = utils_giswater.get_item_data(self.dlg_event, getattr(self.dlg_event, field_name), index=0)
-            if value:
+            if value and str(value) != 'NULL':
                 setattr(event, field_name, value)
 
         # set fixed values
@@ -936,9 +1006,11 @@ class ManageVisit(ParentManage, QObject):
                     continue
                 if type(getattr(self.dlg_event, field_name)) is QLineEdit:
                     value = getattr(self.dlg_event, field_name).text()
+                if type(getattr(self.dlg_event, field_name)) is QTextEdit:
+                    value = getattr(self.dlg_event, field_name).toPlainText()
                 if type(getattr(self.dlg_event, field_name)) is QComboBox:
                     value = utils_giswater.get_item_data(self.dlg_event, getattr(self.dlg_event, field_name), index=0)
-                if value:
+                if value and str(value) != 'NULL':
                     setattr(event, field_name, value)
 
             # update the record
